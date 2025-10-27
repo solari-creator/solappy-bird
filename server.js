@@ -1,46 +1,48 @@
-const express = require('express')
-const solanaWeb3 = require('@solana/web3.js')
-const path = require('path')
+import express from "express"
+import dotenv from "dotenv"
+import { Connection, Keypair, PublicKey, Transaction, SystemProgram } from 
+"@solana/web3.js"
+import base58 from "bs58"
 
+dotenv.config()
 const app = express()
-const port = process.env.PORT || 3000
-
 app.use(express.json())
+
+// ✅ Frontend dosyalarını sunmak için
 app.use(express.static('public'))
-
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'))
+  res.sendFile(__dirname + '/public/index.html')
 })
 
-// Environment variable’dan cüzdanları yükle
-const gameWallet = solanaWeb3.Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(process.env.GAME_WALLET))
-)
-const tokenWallet = solanaWeb3.Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(process.env.TOKEN_WALLET))
-)
+// ✅ Solana bağlantısı
+const connection = new Connection("https://api.mainnet-beta.solana.com")
 
-let scores = []
-let fetchedSignatures = new Set()
+// ✅ Cüzdanlar environment değişkenlerinden alınacak
+const gameWallet = 
+Keypair.fromSecretKey(base58.decode(process.env.GAME_WALLET_PRIVATE_KEY))
+const tokenWallet = 
+Keypair.fromSecretKey(base58.decode(process.env.TOKEN_WALLET_PRIVATE_KEY))
 
-// Skor ekleme endpoint
-app.post('/new-score', async (req, res) => {
-  const { signature, score } = req.body
-  if (!signature || !score) return res.status(400).json({ error: 'Missing fields' })
+// ✅ Skor kaydı (örnek endpoint)
+app.post('/submit-score', async (req, res) => {
+  const { score, player } = req.body
+  console.log(`Yeni skor alındı: ${player} - ${score}`)
 
-  if (!fetchedSignatures.has(signature)) {
-    fetchedSignatures.add(signature)
-    scores.push({ signature, score })
-    scores.sort((a, b) => b.score - a.score)
-  }
-
-  res.json({ status: 'ok', top10: scores.slice(0,10) })
+  // burada zincire yazma veya kaydetme işlemleri olacak
+  res.json({ success: true, message: "Skor kaydedildi" })
 })
 
-// Skorları frontend’e gönder
+// ✅ Skorları görmek için (geçici dummy sayfa)
 app.get('/scores', (req, res) => {
-  res.json(scores.slice(0,10))
+  res.send(`
+    <h1>Live Scores</h1>
+    <table border="1" cellpadding="5">
+      <tr><th>Rank</th><th>Score</th><th>Signature</th><th>Slot</th></tr>
+    </table>
+  `)
 })
 
-app.listen(port, () => console.log(`Server running at 
-http://localhost:${port}`))
+const PORT = process.env.PORT || 10000
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`)
+})
