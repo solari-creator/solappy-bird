@@ -1,48 +1,37 @@
-import express from "express"
-import dotenv from "dotenv"
-import { Connection, Keypair, PublicKey, Transaction, SystemProgram } from 
-"@solana/web3.js"
-import base58 from "bs58"
+import express from 'express';
+import cors from 'cors';
 
-dotenv.config()
-const app = express()
-app.use(express.json())
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-// ✅ Frontend dosyalarını sunmak için
-app.use(express.static('public'))
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html')
-})
+// Basit in-memory top10 array
+let topScores = [];
 
-// ✅ Solana bağlantısı
-const connection = new Connection("https://api.mainnet-beta.solana.com")
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
-// ✅ Cüzdanlar environment değişkenlerinden alınacak
-const gameWallet = 
-Keypair.fromSecretKey(base58.decode(process.env.GAME_WALLET_PRIVATE_KEY))
-const tokenWallet = 
-Keypair.fromSecretKey(base58.decode(process.env.TOKEN_WALLET_PRIVATE_KEY))
+// Endpoint: yeni skor
+app.post('/new-score', (req, res) => {
+  const { signature, score } = req.body;
 
-// ✅ Skor kaydı (örnek endpoint)
-app.post('/submit-score', async (req, res) => {
-  const { score, player } = req.body
-  console.log(`Yeni skor alındı: ${player} - ${score}`)
+  if (!signature || typeof score !== 'number') {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
 
-  // burada zincire yazma veya kaydetme işlemleri olacak
-  res.json({ success: true, message: "Skor kaydedildi" })
-})
+  // Top10 skorları güncelle
+  topScores.push({ signature, score });
+  topScores.sort((a, b) => b.score - a.score);
+  if (topScores.length > 10) topScores = topScores.slice(0, 10);
 
-// ✅ Skorları görmek için (geçici dummy sayfa)
+  res.json({ top10: topScores });
+});
+
+// Endpoint: top10 skorları getir
 app.get('/scores', (req, res) => {
-  res.send(`
-    <h1>Live Scores</h1>
-    <table border="1" cellpadding="5">
-      <tr><th>Rank</th><th>Score</th><th>Signature</th><th>Slot</th></tr>
-    </table>
-  `)
-})
+  res.json(topScores);
+});
 
-const PORT = process.env.PORT || 10000
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`)
-})
+  console.log(`Server running at http://localhost:${PORT}`);
+});
