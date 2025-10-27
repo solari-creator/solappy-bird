@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solappy Leaderboard</title>
+<style>
+  body { font-family: Arial; padding: 10px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px; border: 1px solid #ccc; text-align: center; }
+  th { background: #333; color: #fff; }
+  button { padding: 4px 8px; }
+</style>
+</head>
+<body>
+<h1>Leaderboard</h1>
+
+<select id="filter" onchange="fetchLeaderboard()">
+  <option value="all">All Time</option>
+  <option value="1d">Last 24h</option>
+  <option value="1w">Last Week</option>
+</select>
+
+<table id="leaderboard">
+  <thead>
+    <tr><th>Rank</th><th>Player</th><th>Total SOL 
+Spent</th><th>Share</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+async function fetchLeaderboard() {
+  const filter = document.getElementById('filter').value;
+  const res = await fetch(`/leaderboard/${filter}`);
+  const data = await res.json();
+  const tbody = document.querySelector('#leaderboard tbody');
+  tbody.innerHTML = '';
+  data.forEach((p, idx) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${idx + 1}</td>
+      <td>${p.player}</td>
+      <td>${p.total.toFixed(2)}</td>
+      <td><button onclick="sharePlayer('${p.player}')">Share</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function sharePlayer(player) {
+  navigator.clipboard.writeText(`Check out ${player}'s score!`);
+  alert('Player link copied to clipboard');
+}
+
+// Live update every 10s
+setInterval(fetchLeaderboard, 10000);
+fetchLeaderboard();
+</script>
+</body>
+</html>
