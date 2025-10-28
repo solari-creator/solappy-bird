@@ -1,30 +1,38 @@
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
 const app = express();
-const port = process.env.PORT || 10000;
+const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static("public"));
 
-app.get("/", (req, res) => {
-  res.send("Server is running and ready to receive scores");
-});
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-app.post("/score", (req, res) => {
+// Public klasörünü static olarak sun
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Score endpoint
+app.post('/score', (req, res) => {
   const { signature, score } = req.body;
-  if (!signature || !score) {
-    return res.status(400).json({ error: "Missing signature or score" });
-  }
-  console.log("Received score:", score, "Signature:", signature);
-  return res.status(200).json({ success: true, received: { signature, 
-score } });
+  if (!signature || !score) return res.status(400).json({ error: 'Missing signature or score' });
+
+  console.log('Score received', signature, score);
+  res.json({ success: true });
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// Tüm diğer istekleri index.html’e yönlendir
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
