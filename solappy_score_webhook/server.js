@@ -1,46 +1,22 @@
-import express from "express"
-import cors from "cors"
-import bodyParser from "body-parser"
-import dotenv from "dotenv"
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
-const app = express()
-const port = process.env.PORT || 10000
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-app.use(cors())
-app.use(bodyParser.json())
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static("public"));
 
-const gameWallet = process.env.GAME_WALLET
-const projectWallet = process.env.PROJECT_WALLET
-const rpcEndpoint = process.env.SOLANA_RPC
+app.post("/score", (req, res) => {
+  const { signature, score } = req.body;
+  if (!signature || !score) return res.status(400).json({ error: "Missing signature or score" });
+  console.log("Score received:", signature, score);
+  res.json({ status: "ok" });
+});
 
-app.get("/", (req, res) => {
-  res.send("Server is running")
-})
-
-app.post("/submit-score", (req, res) => {
-  const { signature, score, player } = req.body
-  if (!signature || !score) return res.status(400).json({ error: "Missing signature or score" })
-
-  console.log(`Player: ${player}, Score: ${score}, Signature: ${signature}`)
-
-  // Here you would add on-chain submission logic using gameWallet, 
-projectWallet, rpcEndpoint
-
-  res.status(200).json({ message: "Score submitted successfully" })
-})
-
-app.get("/top-scores", (req, res) => {
-  // Placeholder top scores
-  const topScores = [
-    { player: "Alice", score: 100 },
-    { player: "Bob", score: 90 },
-    { player: "Charlie", score: 80 },
-  ]
-  res.status(200).json(topScores)
-})
-
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`)
-})
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
