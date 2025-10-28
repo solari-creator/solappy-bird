@@ -14,8 +14,7 @@ let scores = []
 
 app.post('/score', (req, res) => {
   const { signature, score } = req.body
-  if (!signature || !score) return res.status(400).json({ error: 'Missing 
-signature or score' })
+  if (!signature || !score) return res.status(400).json({ error: 'Missing signature or score' })
   scores.push({ signature, score })
   scores.sort((a, b) => b.score - a.score)
   if (scores.length > 10) scores = scores.slice(0, 10)
