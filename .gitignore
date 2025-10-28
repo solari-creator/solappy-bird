@@ -1,6 +1,3 @@
 node_modules/
 *.json
-node_modules/
-*.json
-node_modules/
-*.json
+solappy_score_webhook/
