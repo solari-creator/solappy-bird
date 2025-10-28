@@ -1,30 +1,28 @@
 import express from 'express'
-import path from 'path'
+import cors from 'cors'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 const app = express()
-
+app.use(cors())
 app.use(express.json())
-app.use(express.static(path.join(process.cwd(), 'public')))
+app.use(express.static('public'))
 
-const GAME_WALLET = process.env.GAME_WALLET
-const POT_WALLET = process.env.POT_WALLET
-const PROJECT_WALLET = process.env.PROJECT_WALLET
-
-console.log('Wallets:', { GAME_WALLET, POT_WALLET, PROJECT_WALLET })
+const scores = []
 
 app.post('/score', (req, res) => {
   const { signature, score } = req.body
-  if (!signature || !score) return res.status(400).json({ error: 'Missing signature or score' })
-
-  console.log('New score submitted:', { score, signature })
+  if (!signature || score === undefined) return res.status(400).json({ error: 
+'Missing signature or score' })
+  const slot = Date.now()
+  scores.push({ signature, score, slot })
+  scores.sort((a,b) => b.score - a.score)
   res.json({ success: true })
 })
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'public', 'index.html'))
+app.get('/top10', (req, res) => {
+  res.json(scores.slice(0,10))
 })
 
 const PORT = process.env.PORT || 10000
