@@ -1,28 +1,45 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solappy Game</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin-top: 
-50px; }
-    button { padding: 10px 20px; font-size: 18px; }
-    ul { list-style-type: none; padding: 0; }
-    li { margin: 5px 0; }
-    #topScoresContainer { margin-top: 30px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solappy Bird Scores</title>
 </head>
 <body>
-  <h1>Solappy Game Sunucusu Çalıyor</h1>
-  <button id="startBtn">Tıkla!</button>
-  <p>Skor: <span id="score">0</span></p>
+<h1>Solappy Bird</h1>
+<button id="sendScore">Send Random Score</button>
+<h2>Top 10 Scores</h2>
+<ul id="topScores"></ul>
 
-  <div id="topScoresContainer">
-    <h2>Top 10 Skorlar</h2>
-    <ul id="topScores"></ul>
-  </div>
+<script>
+const topScoresEl = document.getElementById("topScores")
 
-  <script src="script.js"></script>
+async function updateTopScores() {
+  const res = await fetch("/top")
+  const data = await res.json()
+  topScoresEl.innerHTML = ""
+  data.topScores.forEach(item => {
+    const li = document.createElement("li")
+    li.textContent = `${item.signature}: ${item.score}`
+    topScoresEl.appendChild(li)
+  })
+}
+
+document.getElementById("sendScore").addEventListener("click", async () => {
+  const signature = "Player_" + Math.floor(Math.random()*1000)
+  const score = Math.floor(Math.random()*100)
+  
+  await fetch("/score", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ signature, score })
+  })
+
+  updateTopScores()
+})
+
+// Sayfa açılır açılmaz top 10 güncelle
+updateTopScores()
+</script>
 </body>
 </html>

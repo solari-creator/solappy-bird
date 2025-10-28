@@ -1,30 +1,40 @@
-const express = require('express');
-const app = express();
-const port = 3000;
+import express from "express"
+import cors from "cors"
 
-let scores = []; // Skorlar burada tutulacak
+const app = express()
+const PORT = process.env.PORT || 10000
 
-app.use(express.static('public'));
-app.use(express.json()); // JSON POST verileri için
+// Middleware
+app.use(cors())
+app.use(express.json()) // JSON body parse için gerekli
 
-app.get('/scores', (req, res) => {
-  res.json(scores);
-});
+// Scores saklamak için basit bir array (Render’da kalıcı değil, sadece 
+örnek)
+let scores = []
 
-app.post('/score-update', (req, res) => {
-  const { signature, score, slot } = req.body;
-  if (!signature || !score) return res.status(400).json({ error: 'Missing 
-signature or score' });
+// Skor ekleme endpoint
+app.post("/score", (req, res) => {
+  const { signature, score } = req.body
+  console.log("Received body:", req.body) // debug için
 
-  if (!scores.find(s => s.signature === signature)) {
-    scores.push({ signature, score, slot });
-    scores.sort((a, b) => b.score - a.score);
-    console.log(`New score added: ${score}, signature: ${signature}`);
+  if (!signature || !score) {
+    return res.status(400).json({ error: "Missing signature or score" })
   }
 
-  res.json({ status: 'ok' });
-});
+  scores.push({ signature, score, date: new Date().toISOString() })
+  scores.sort((a, b) => b.score - a.score) // büyükten küçüğe
+  if (scores.length > 10) scores = scores.slice(0, 10) // sadece top 10
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+  return res.json({ message: "Score added", topScores: scores })
+})
+
+// Top 10 skorları alma endpoint
+app.get("/top", (req, res) => {
+  return res.json({ topScores: scores })
+})
+
+// Statik dosyaları sun (index.html, main.js vs.)
+app.use(express.static("public"))
+
+app.listen(PORT, () => console.log(`Server running at 
+http://localhost:${PORT}`))
