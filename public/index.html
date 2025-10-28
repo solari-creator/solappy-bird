@@ -1,48 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Solappy Score Board</title>
-<style>
-  body { font-family: Arial, sans-serif; text-align: center; margin: 20px; 
-}
-  table { margin: 20px auto; border-collapse: collapse; }
-  th, td { border: 1px solid #333; padding: 8px 12px; }
-</style>
+  <meta charset="UTF-8">
+  <title>Solappy Scores</title>
 </head>
 <body>
-<h1>Top Scores</h1>
-<table id="scoreTable">
-  <tr><th>Signature</th><th>Score</th></tr>
-</table>
+  <h1>Top Scores</h1>
+  <ul id="score-list"></ul>
 
-<script>
-async function sendScore(signature, score) {
-  try {
-    const res = await fetch('/score', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signature, score })
-    });
-    const data = await res.json();
-    if (data.success) addScoreRow(signature, score);
-  } catch (err) {
-    console.error(err);
-  }
-}
+  <script>
+    async function fetchScores() {
+      try {
+        const res = await fetch('/scores'); // server.js'de bu route 
+olmalı
+        const data = await res.json();
+        const ul = document.getElementById('score-list');
+        ul.innerHTML = '';
+        data.forEach(s => {
+          const li = document.createElement('li');
+          li.textContent = `${s.signature}: ${s.score}`;
+          ul.appendChild(li);
+        });
+      } catch(err) {
+        console.error(err);
+      }
+    }
 
-function addScoreRow(signature, score) {
-  const table = document.getElementById('scoreTable');
-  const row = table.insertRow();
-  const cell1 = row.insertCell(0);
-  const cell2 = row.insertCell(1);
-  cell1.textContent = signature;
-  cell2.textContent = score;
-}
-
-// Örnek test
-sendScore('testsig', 100);
-</script>
+    fetchScores();
+    setInterval(fetchScores, 5000);
+  </script>
 </body>
 </html>
