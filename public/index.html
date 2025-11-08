@@ -1,13 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Solappy Bird</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solappy Leaderboard</title>
+  <style>
+    body {
+      font-family: monospace;
+      background-color: #0d0d0d;
+      color: #00ffcc;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #00ffcc;
+    }
+    .leaderboard {
+      margin-top: 30px;
+      display: inline-block;
+      text-align: left;
+      border: 1px solid #00ffcc;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .top3 {
+      color: #ffcc00;
+      font-weight: bold;
+    }
+    .wallet {
+      font-size: 14px;
+      color: #ffffff;
+    }
+    .reward {
+      color: #ff6666;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-<h1>Top 10 Scores</h1>
-<ul id="score-list"></ul>
-<script src="script.js"></script>
+  <h1>🏆 Solappy Daily Leaderboard 🏆</h1>
+
+  <div id="leaderboard" class="leaderboard">Loading leaderboard...</div>
+
+  <h2>💰 Latest Rewards</h2>
+  <div id="rewards">Loading rewards...</div>
+
+  <script>
+    async function fetchLeaderboard() {
+      const res = await fetch('/scores');
+      const data = await res.json();
+
+      const leaderboard = document.getElementById('leaderboard');
+      leaderboard.innerHTML = '';
+
+      data.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.classList.add('player');
+        if (i < 3) div.classList.add('top3');
+        div.innerHTML = `#${i + 1} — Wallet: <span 
+class="wallet">${p.wallet}</span> — Score: ${p.score}`;
+        leaderboard.appendChild(div);
+      });
+    }
+
+    async function fetchRewards() {
+      const res = await fetch('/rewards');
+      const rewards = await res.json();
+
+      const rewardsDiv = document.getElementById('rewards');
+      rewardsDiv.innerHTML = '';
+
+      if (!rewards.length) {
+        rewardsDiv.textContent = 'No rewards distributed yet.';
+        return;
+      }
+
+      rewards[0].payouts.forEach(r => {
+        const p = document.createElement('p');
+        p.classList.add('reward');
+        p.textContent = `Wallet: ${r.wallet} — Reward: ${(r.lamports / 
+1_000_000).toFixed(3)} SOL`;
+        rewardsDiv.appendChild(p);
+      });
+    }
+
+    fetchLeaderboard();
+    fetchRewards();
+    setInterval(fetchLeaderboard, 10000);
+    setInterval(fetchRewards, 15000);
+  </script>
 </body>
 </html>
