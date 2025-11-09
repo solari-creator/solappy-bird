@@ -11,10 +11,81 @@
       color: #00ffcc;
       text-align: center;
       padding: 20px;
+      overflow-x: hidden;
     }
     h1 {
       color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc;
     }
+
+    /* --- Rows --- */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* --- Stat Boxes --- */
+    .stat-box {
+      width: 150px;
+      height: 80px;
+      border: 2px solid #00ffcc;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #111;
+      color: #00ffcc;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.3s, border-color 0.3s;
+    }
+
+    /* --- Hero Box --- */
+    #heroOfDayBox {
+      border-color: #ffcc00;
+      animation: heroPulse 2s infinite alternate;
+    }
+
+    @keyframes heroPulse {
+      0% { box-shadow: 0 0 10px #ffcc00aa, 0 0 20px #ffcc00aa; }
+      50% { box-shadow: 0 0 25px #ffcc00ee, 0 0 50px #ffcc00ee; }
+      100% { box-shadow: 0 0 10px #ffcc00aa, 0 0 20px #ffcc00aa; }
+    }
+
+    /* --- Neon Glow Hover Effect --- */
+    .stat-box:hover {
+      transform: scale(1.05);
+      border-color: #14f0e8;
+      box-shadow: 0 0 20px #14f0e8aa, 0 0 40px #14f0e8aa, 0 0 60px #14f0e8aa;
+    }
+
+    /* --- Pulse animation for value changes --- */
+    .pulse {
+      animation: pulseAnim 0.5s ease-out;
+    }
+
+    @keyframes pulseAnim {
+      0% { color: #00ffcc; text-shadow: 0 0 5px #00ffcc; }
+      50% { color: #14f0e8; text-shadow: 0 0 15px #14f0e8; }
+      100% { color: #00ffcc; text-shadow: 0 0 5px #00ffcc; }
+    }
+
+    /* --- Titles & Values --- */
+    .stat-title {
+      font-size: 12px;
+      color: #14f0e8;
+      margin-bottom: 5px;
+    }
+    .stat-value {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* --- Leaderboard --- */
     .leaderboard {
       margin-top: 30px;
       display: inline-block;
@@ -22,11 +93,20 @@
       border: 1px solid #00ffcc;
       padding: 20px;
       border-radius: 8px;
+      box-shadow: 0 0 10px #00ffcc55;
     }
     .top3 {
       color: #ffcc00;
       font-weight: bold;
+      animation: top3Pulse 1.5s infinite alternate;
     }
+
+    @keyframes top3Pulse {
+      0% { text-shadow: 0 0 5px #ffcc00; }
+      50% { text-shadow: 0 0 20px #ffcc00; }
+      100% { text-shadow: 0 0 5px #ffcc00; }
+    }
+
     .wallet {
       font-size: 14px;
       color: #ffffff;
@@ -36,10 +116,55 @@
       font-size: 14px;
       margin-top: 10px;
     }
+
+    /* --- Flying SOL effect --- */
+    .solIcon {
+      position: absolute;
+      font-size: 20px;
+      animation: flySol 2s forwards;
+      pointer-events: none;
+    }
+
+    @keyframes flySol {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-150px) scale(0.5); opacity: 0; }
+    }
   </style>
 </head>
 <body>
   <h1>🏆 Solappy Daily Leaderboard 🏆</h1>
+
+  <!-- --- Top Stats Row --- -->
+  <div class="stats-row">
+    <div class="stat-box" id="heroOfDayBox">
+      <div class="stat-title">Hero of the Day</div>
+      <div class="stat-value" id="heroOfDay">Loading...</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-title">Total Plays</div>
+      <div class="stat-value" id="totalPlays">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-title">Total Players</div>
+      <div class="stat-value" id="totalPlayers">0</div>
+    </div>
+  </div>
+
+  <!-- --- Bottom Stats Row --- -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-title">Time Left Today</div>
+      <div class="stat-value" id="timeLeft">--:--:--</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-title">Pot Wallet</div>
+      <div class="stat-value" id="potWallet">Loading...</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-title">Total Rewards Distributed</div>
+      <div class="stat-value" id="totalRewards">0 SOL</div>
+    </div>
+  </div>
 
   <div id="leaderboard" class="leaderboard">Loading leaderboard...</div>
 
@@ -47,48 +172,100 @@
   <div id="rewards">Loading rewards...</div>
 
   <script>
-    async function fetchLeaderboard() {
-      const res = await fetch('/scores');
-      const data = await res.json();
-
-      const leaderboard = document.getElementById('leaderboard');
-      leaderboard.innerHTML = '';
-
-      data.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.classList.add('player');
-        if (i < 3) div.classList.add('top3');
-        div.innerHTML = `#${i + 1} — Wallet: <span 
-class="wallet">${p.wallet}</span> — Score: ${p.score}`;
-        leaderboard.appendChild(div);
-      });
+    function pulseValue(el, newValue) {
+      if(el.textContent!==newValue){
+        el.textContent=newValue;
+        el.classList.remove('pulse'); 
+        void el.offsetWidth; 
+        el.classList.add('pulse'); 
+      }
     }
 
-    async function fetchRewards() {
-      const res = await fetch('/rewards');
-      const rewards = await res.json();
+    function spawnSolIcons(count=5){
+      for(let i=0;i<count;i++){
+        const sol=document.createElement('div');
+        sol.className='solIcon';
+        sol.textContent='🪙';
+        sol.style.left=(Math.random()*window.innerWidth)+'px';
+        sol.style.top=(window.innerHeight-100)+'px';
+        document.body.appendChild(sol);
+        setTimeout(()=>sol.remove(),2000);
+      }
+    }
 
-      const rewardsDiv = document.getElementById('rewards');
-      rewardsDiv.innerHTML = '';
+    async function fetchLeaderboard(){
+      const res=await fetch('/scores');
+      const data=await res.json();
 
-      if (!rewards.length) {
-        rewardsDiv.textContent = 'No rewards distributed yet.';
+      const leaderboard=document.getElementById('leaderboard');
+      leaderboard.innerHTML='';
+
+      data.forEach((p,i)=>{
+        const div=document.createElement('div');
+        div.classList.add('player');
+        if(i<3) div.classList.add('top3');
+        div.innerHTML=`#${i+1} — Wallet: <span class="wallet">${p.wallet}</span> — Score: ${p.score}`;
+        leaderboard.appendChild(div);
+      });
+
+      // Hero of the day, total plays, total players
+      pulseValue(document.getElementById('heroOfDay'), data.length>0?`${data[0].wallet} — ${data[0].score}`:'N/A');
+      pulseValue(document.getElementById('totalPlays'), data.reduce((sum,p)=>sum+(p.plays||1),0));
+      pulseValue(document.getElementById('totalPlayers'), data.length);
+    }
+
+    async function fetchRewards(){
+      const res=await fetch('/rewards');
+      const rewards=await res.json();
+
+      const rewardsDiv=document.getElementById('rewards');
+      rewardsDiv.innerHTML='';
+
+      if(!rewards.length){
+        rewardsDiv.textContent='No rewards distributed yet.';
         return;
       }
 
-      rewards[0].payouts.forEach(r => {
-        const p = document.createElement('p');
+      rewards[0].payouts.forEach(r=>{
+        const p=document.createElement('p');
         p.classList.add('reward');
-        p.textContent = `Wallet: ${r.wallet} — Reward: ${(r.lamports / 
-1_000_000).toFixed(3)} SOL`;
+        p.textContent=`Wallet: ${r.wallet} — Reward: ${(r.lamports/1_000_000).toFixed(3)} SOL`;
         rewardsDiv.appendChild(p);
+        spawnSolIcons(3); 
       });
+    }
+
+    async function fetchPotAndRewards(){
+      const res=await fetch('/pot');
+      const data=await res.json();
+
+      pulseValue(document.getElementById('potWallet'), data.wallet||'N/A');
+      pulseValue(document.getElementById('totalRewards'), (data.totalRewards/1_000_000).toFixed(3)+' SOL');
+    }
+
+    function updateTimeLeft(){
+      const now=new Date();
+      const tomorrow=new Date();
+      tomorrow.setHours(24,0,0,0);
+      const diff=tomorrow-now;
+
+      const hours=Math.floor(diff/1000/60/60);
+      const minutes=Math.floor((diff/1000/60)%60);
+      const seconds=Math.floor((diff/1000)%60);
+
+      pulseValue(document.getElementById('timeLeft'),
+        `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`);
     }
 
     fetchLeaderboard();
     fetchRewards();
-    setInterval(fetchLeaderboard, 10000);
-    setInterval(fetchRewards, 15000);
+    fetchPotAndRewards();
+    updateTimeLeft();
+
+    setInterval(fetchLeaderboard,10000);
+    setInterval(fetchRewards,15000);
+    setInterval(fetchPotAndRewards,15000);
+    setInterval(updateTimeLeft,1000);
   </script>
 </body>
 </html>
