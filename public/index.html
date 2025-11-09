@@ -5,115 +5,188 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solappy Leaderboard</title>
 <style>
-body {
-  font-family: monospace;
-  background-color: #0d0d0d;
-  color: #00ffcc;
-  text-align: center;
-  padding: 20px;
-  overflow-x: hidden;
-}
-h1 { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
+  body { font-family: monospace; background-color: #0d0d0d; color: #00ffcc; text-align: center; padding: 20px; overflow-x: hidden; }
+  h1 { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
 
-.stats-row { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-.stat-box { width: 150px; height: 80px; border: 2px solid #00ffcc; border-radius: 12px; padding: 10px;
-  display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #111;
-  color: #00ffcc; transition: transform 0.2s, box-shadow 0.3s; }
-#heroOfDayBox { border-color: #ffcc00; animation: heroPulse 2s infinite alternate; }
-@keyframes heroPulse { 0% { box-shadow:0 0 10px #ffcc00aa} 50% { box-shadow:0 0 25px #ffcc00ee} 100% { box-shadow:0 0 10px #ffcc00aa} }
-.stat-box:hover { transform: scale(1.05); box-shadow: 0 0 20px #14f0e8aa; }
-.pulse { animation: pulseAnim 0.5s ease-out; }
-@keyframes pulseAnim {0%,100%{color:#00ffcc}50%{color:#14f0e8;text-shadow:0 0 15px #14f0e8}}
-.stat-title { font-size:12px;color:#14f0e8;margin-bottom:5px; }
-.stat-value { font-size:16px;font-weight:bold; }
-.leaderboard { margin-top:30px; display:inline-block; text-align:left; border:1px solid #00ffcc; padding:20px; border-radius:8px; box-shadow:0 0 10px 
-#00ffcc55; max-width:800px;}
-.top3 { color:#ffcc00;font-weight:bold; animation:top3Pulse 1.5s infinite alternate; }
-@keyframes top3Pulse{0%{text-shadow:0 0 5px #ffcc00}50%{text-shadow:0 0 20px #ffcc00}100%{text-shadow:0 0 5px #ffcc00}}
-.wallet { font-size:14px;color:#fff;cursor:pointer;position:relative; }
-.copied { position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:#00ffcc;color:black;padding:2px 
-5px;border-radius:4px;font-size:12px;opacity:0;transition:opacity 0.2s; }
-.sparkline { display:block;margin-top:5px; }
+  .stats-row { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .stat-box { width: 150px; height: 80px; border: 2px solid #00ffcc; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; 
+justify-content: center; align-items: center; background-color: #111; color: #00ffcc; transition: transform 0.2s, box-shadow 0.3s; }
+  #heroOfDayBox { border-color: #ffcc00; animation: heroPulse 2s infinite alternate; }
+  @keyframes heroPulse { 0% { box-shadow: 0 0 10px #ffcc00aa; } 50% { box-shadow: 0 0 25px #ffcc00ee; } 100% { box-shadow: 0 0 10px #ffcc00aa; } }
+  .stat-box:hover { transform: scale(1.05); box-shadow: 0 0 20px #14f0e8aa; }
+  .pulse { animation: pulseAnim 0.5s ease-out; }
+  @keyframes pulseAnim { 0%,100% { color: #00ffcc; } 50% { color: #14f0e8; text-shadow: 0 0 15px #14f0e8; } }
+  .stat-title { font-size: 12px; color: #14f0e8; margin-bottom: 5px; }
+  .stat-value { font-size: 16px; font-weight: bold; }
+  .leaderboard { margin-top: 30px; display: inline-block; text-align: left; border: 1px solid #00ffcc; padding: 20px; border-radius: 8px; box-shadow: 0 0 
+10px #00ffcc55; max-width: 600px; }
+  .top3 { color: #ffcc00; font-weight: bold; animation: top3Pulse 1.5s infinite alternate; }
+  @keyframes top3Pulse { 0% { text-shadow: 0 0 5px #ffcc00; } 50% { text-shadow: 0 0 20px #ffcc00; } 100% { text-shadow: 0 0 5px #ffcc00; } }
+  .wallet { font-size: 14px; color: #fff; cursor: pointer; position: relative; }
+  .wallet:hover::after { content: attr(data-full); position: absolute; background: #111; border: 1px solid #00ffcc; border-radius: 5px; padding: 5px; 
+color: #00ffcc; top: 20px; left: 0; white-space: nowrap; z-index: 10; }
+  .copied { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #00ffcc; color: black; padding: 2px 5px; border-radius: 
+4px; font-size: 12px; opacity: 0; transition: opacity 0.2s; }
+  .sparkline { display: block; margin-top: 5px; }
 </style>
 </head>
 <body>
 <h1>🏆 Solappy Daily Leaderboard 🏆</h1>
 
 <div class="stats-row">
-  <div class="stat-box" id="heroOfDayBox"><div class="stat-title">Hero of the Day</div><div class="stat-value" id="heroOfDay">Loading...</div></div>
-  <div class="stat-box"><div class="stat-title">Total Plays</div><div class="stat-value" id="totalPlays">0</div></div>
-  <div class="stat-box"><div class="stat-title">Total Players</div><div class="stat-value" id="totalPlayers">0</div></div>
+  <div class="stat-box" id="heroOfDayBox">
+    <div class="stat-title">Hero of the Day</div>
+    <div class="stat-value" id="heroOfDay">Loading...</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-title">Total Plays</div>
+    <div class="stat-value" id="totalPlays">0</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-title">Total Players</div>
+    <div class="stat-value" id="totalPlayers">0</div>
+  </div>
 </div>
 
 <div class="stats-row">
-  <div class="stat-box"><div class="stat-title">Time Left Today</div><div class="stat-value" id="timeLeft">--:--:--</div></div>
-  <div class="stat-box"><div class="stat-title">Pot Wallet</div><div class="stat-value" id="potWallet">0.1 SOL</div></div>
-  <div class="stat-box"><div class="stat-title">Total Rewards</div><div class="stat-value" id="totalRewards">0 SOL</div></div>
+  <div class="stat-box">
+    <div class="stat-title">Time Left Today</div>
+    <div class="stat-value" id="timeLeft">--:--:--</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-title">Pot Wallet</div>
+    <div class="stat-value" id="potWallet">0.1 SOL</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-title">Total Rewards</div>
+    <div class="stat-value" id="totalRewards">0 SOL</div>
+  </div>
 </div>
 
 <div id="leaderboard" class="leaderboard">Loading leaderboard...</div>
-
 <audio id="heroSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9a4b5f285d.mp3?filename=success-1-6297.mp3"></audio>
 
 <script>
 let lastHero = null;
 
-function pulseValue(el,newValue){if(el.textContent!==newValue){el.textContent=newValue;el.classList.remove('pulse');void 
-el.offsetWidth;el.classList.add('pulse');}}
-
-function drawSparkline(canvas,data){
-  if(!data||!data.length)return;
-  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
-  const max=Math.max(...data),min=Math.min(...data);
-  ctx.beginPath();
-  data.forEach((v,i)=>{
-    const x=(i/(data.length-1))*canvas.width;
-    const y=canvas.height-((v-min)/(max-min))*canvas.height;
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  });
-  ctx.strokeStyle='#00ffcc';ctx.lineWidth=1.5;ctx.stroke();
+function pulseValue(el, newValue) {
+  if (el.textContent !== newValue) {
+    el.textContent = newValue;
+    el.classList.remove('pulse');
+    void el.offsetWidth;
+    el.classList.add('pulse');
+  }
 }
 
-async function fetchLeaderboard(){
-  const res=await fetch('/scores');
-  const data=await res.json();
-  const leaderboard=document.getElementById('leaderboard');leaderboard.innerHTML='';
+function drawSparkline(canvas, data) {
+  if (!data || !data.length) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = (i / (data.length - 1)) * canvas.width;
+    const y = canvas.height - ((v - min) / (max - min)) * canvas.height;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#00ffcc';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
 
-  let totalPlays=0;const playersMap=new Map();
-  data.forEach(p=>{totalPlays+=p.plays||1;playersMap.set(p.wallet,(playersMap.get(p.wallet)||0)+1);});
+async function fetchLeaderboard() {
+  const res = await fetch('/scores');
+  const data = await res.json();
+  const leaderboard = document.getElementById('leaderboard');
+  leaderboard.innerHTML = '';
 
-  data.slice(0,20).forEach((p,i)=>{
-    const div=document.createElement('div');div.classList.add('player');if(i<3)div.classList.add('top3');
-    const shortWallet=p.wallet.slice(0,4)+'...'+p.wallet.slice(-4);
-    const walletSpan=document.createElement('span');walletSpan.className='wallet';walletSpan.textContent=shortWallet;
-    walletSpan.dataset.full=p.wallet;
-    walletSpan.addEventListener('click',()=>{navigator.clipboard.writeText(p.wallet);const 
-copied=document.createElement('div');copied.textContent='Copied!';copied.className='copied';walletSpan.appendChild(copied);setTimeout(()=>copied.style.opacity=1,10);setTimeout(()=>{copied.style.opacity=0;copied.remove();},800);});
-    div.innerHTML=`#${i+1} — Wallet: `;div.appendChild(walletSpan);
-    div.innerHTML+=` — Score: ${p.score} (Plays: ${p.plays})`;
-    const canvas=document.createElement('canvas');canvas.classList.add('sparkline');canvas.width=150;canvas.height=30;div.appendChild(canvas);
-    drawSparkline(canvas,p.lastScores||[]);
-    leaderboard.appendChild(div);
+  let totalPlays = 0;
+  const playersSet = new Set();
+  const scoresByWallet = {};
+
+  data.forEach(p => {
+    totalPlays += p.plays || 1;
+    playersSet.add(p.wallet);
+    if (!scoresByWallet[p.wallet]) scoresByWallet[p.wallet] = [];
+    scoresByWallet[p.wallet].push(p.score);
   });
 
-  pulseValue(document.getElementById('heroOfDay'),data.length>0?data[0].wallet.slice(0,4)+'...'+data[0].wallet.slice(-4)+' — '+data[0].score:'N/A');
-  pulseValue(document.getElementById('totalPlays'),totalPlays);
-  pulseValue(document.getElementById('totalPlayers'),playersMap.size);
+  // Sort by highest score overall
+  const sorted = Object.keys(scoresByWallet).map(w => ({
+    wallet: w,
+    score: Math.max(...scoresByWallet[w]),
+    plays: scoresByWallet[w].length,
+    lastScores: scoresByWallet[w]
+  })).sort((a,b)=>b.score-a.score);
 
-  if(data.length>0 && data[0].wallet!==lastHero){lastHero=data[0].wallet;document.getElementById('heroSound').play();}
+  // Render top 20
+  sorted.slice(0,20).forEach((p,i)=>{
+    const div = document.createElement('div');
+    div.classList.add('player');
+    if(i<3) div.classList.add('top3');
+
+    const shortWallet = p.wallet.slice(0,4)+'...'+p.wallet.slice(-4);
+    const walletSpan = document.createElement('span');
+    walletSpan.className='wallet';
+    walletSpan.textContent=shortWallet;
+    walletSpan.dataset.full=p.wallet;
+
+    walletSpan.addEventListener('click',()=>{
+      navigator.clipboard.writeText(p.wallet);
+      const copied = document.createElement('div');
+      copied.textContent='Copied!';
+      copied.className='copied';
+      walletSpan.appendChild(copied);
+      setTimeout(()=>copied.style.opacity=1,10);
+      setTimeout(()=>{copied.style.opacity=0; copied.remove();},800);
+    });
+
+    div.innerHTML=`#${i+1} — Wallet: `;
+    div.appendChild(walletSpan);
+    div.innerHTML+=` — Score: ${p.score} (Plays: ${p.plays})`;
+
+    const canvas = document.createElement('canvas');
+    canvas.classList.add('sparkline');
+    canvas.width=150; canvas.height=30;
+    div.appendChild(canvas);
+
+    leaderboard.appendChild(div);
+    drawSparkline(canvas,p.lastScores);
+  });
+
+  pulseValue(document.getElementById('heroOfDay'),
+    sorted.length>0 ? sorted[0].wallet.slice(0,4)+'...'+sorted[0].wallet.slice(-4)+' — '+sorted[0].score : 'N/A');
+  pulseValue(document.getElementById('totalPlays'), totalPlays);
+  pulseValue(document.getElementById('totalPlayers'), playersSet.size);
+
+  if(sorted.length>0 && sorted[0].wallet!==lastHero){
+    lastHero=sorted[0].wallet;
+    document.getElementById('heroSound').play();
+  }
 }
 
 function updateTimeLeft(){
-  const now=new Date(),tomorrow=new Date();tomorrow.setHours(24,0,0,0);
-  const diff=tomorrow-now;
-  const hours=Math.floor(diff/1000/60/60),minutes=Math.floor((diff/1000/60)%60),seconds=Math.floor((diff/1000)%60);
-  
-pulseValue(document.getElementById('timeLeft'),`${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`);
-  if(diff<=0){fetchLeaderboard();}
+  const now=new Date();
+  const tomorrow=new Date();
+  tomorrow.setHours(24,0,0,0);
+  const diff = tomorrow-now;
+
+  const hours=Math.floor(diff/1000/60/60);
+  const minutes=Math.floor((diff/1000/60)%60);
+  const seconds=Math.floor((diff/1000)%60);
+
+  pulseValue(document.getElementById('timeLeft'),
+    `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`);
+
+  if(diff<=0) fetchLeaderboard();
 }
 
-fetchLeaderboard();updateTimeLeft();
-setInterval(fetchLeaderboard,10000);setInterval(updateTimeLeft,1000);
+fetchLeaderboard();
+updateTimeLeft();
+setInterval(fetchLeaderboard,10000);
+setInterval(updateTimeLeft,1000);
 </script>
 </body>
 </html>
