@@ -5,111 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solappy Leaderboard</title>
 <style>
-body {
-  font-family: monospace;
-  background-color: #0d0d0d;
-  color: #00ffcc;
-  text-align: center;
-  padding: 20px;
-  overflow-x: hidden;
-}
-h1 {
-  color: #00ffcc;
-  text-shadow: 0 0 10px #00ffcc;
-}
-
-/* --- Stats rows --- */
-.stats-row {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
-  flex-wrap: wrap;
-}
-.stat-box {
-  width: 180px;
-  height: 80px;
-  border: 2px solid #00ffcc;
-  border-radius: 12px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: #111;
-  color: #00ffcc;
-  transition: transform 0.2s, box-shadow 0.3s;
-}
-.stat-box:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px #14f0e8aa;
-}
+/* --- Styles aynen kalıyor --- */
+body { font-family: monospace; background-color: #0d0d0d; color: #00ffcc; text-align: center; padding: 20px; overflow-x: hidden; }
+h1 { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
+.stats-row { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.stat-box { width: 180px; height: 80px; border: 2px solid #00ffcc; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+background-color: #111; color: #00ffcc; transition: transform 0.2s, box-shadow 0.3s; }
+.stat-box:hover { transform: scale(1.05); box-shadow: 0 0 20px #14f0e8aa; }
 .pulse { animation: pulseAnim 0.5s ease-out; }
-@keyframes pulseAnim {
-  0%,100% { color: #00ffcc; }
-  50% { color: #14f0e8; text-shadow: 0 0 15px #14f0e8; }
-}
+@keyframes pulseAnim { 0%,100% { color: #00ffcc; } 50% { color: #14f0e8; text-shadow: 0 0 15px #14f0e8; } }
 .stat-title { font-size: 12px; color: #14f0e8; margin-bottom: 5px; }
 .stat-value { font-size: 16px; font-weight: bold; }
-
 #heroOfDayBox { border-color: #ffcc00; animation: heroPulse 2s infinite alternate; }
 @keyframes heroPulse { 0%{box-shadow:0 0 10px #ffcc00aa;} 50%{box-shadow:0 0 25px #ffcc00ee;} 100%{box-shadow:0 0 10px #ffcc00aa;} }
-
-.leaderboard {
-  margin-top: 30px;
-  display: inline-block;
-  text-align: left;
-  border: 1px solid #00ffcc;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 15px #00ffcc55;
-  max-width: 700px;
-}
-.leaderboard h2 {
-  margin-top:0; margin-bottom:10px;
-  color:#00ffcc;
-  text-align:center;
-}
+.leaderboard { margin-top: 30px; display: inline-block; text-align: left; border: 1px solid #00ffcc; padding: 20px; border-radius: 8px; box-shadow: 0 0 15px #00ffcc55; max-width: 700px; }
+.leaderboard h2 { margin-top:0; margin-bottom:10px; color:#00ffcc; text-align:center; }
 .top3 { color:#ffcc00; font-weight:bold; animation: top3Pulse 1.5s infinite alternate; }
 .top4to10 { color:#14f0e8; font-weight:bold; }
 @keyframes top3Pulse {0%{text-shadow:0 0 5px #ffcc00;} 50%{text-shadow:0 0 20px #ffcc00;} 100%{text-shadow:0 0 5px #ffcc00;}}
-
 .player { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
 .wallet { font-size: 14px; color: #fff; cursor: pointer; position: relative; }
-.wallet:hover::after {
-  content: attr(data-full);
-  position: absolute;
-  background: #111;
-  border: 1px solid #00ffcc;
-  border-radius: 5px;
-  padding: 5px;
-  color: #00ffcc;
-  top: 20px;
-  left: 0;
-  white-space: nowrap;
-  z-index: 10;
-}
-.copied {
-  position: absolute; top: -20px; left: 50%;
-  transform: translateX(-50%);
-  background: #00ffcc; color: black;
-  padding: 2px 5px; border-radius: 4px;
-  font-size: 12px; opacity: 0; transition: opacity 0.2s;
-}
+.wallet:hover::after { content: attr(data-full); position: absolute; background: #111; border: 1px solid #00ffcc; border-radius: 5px; padding: 5px; color: #00ffcc; top: 20px; left: 0; white-space: 
+nowrap; z-index: 10; }
+.copied { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #00ffcc; color: black; padding: 2px 5px; border-radius: 4px; font-size: 12px; opacity: 0; transition: 
+opacity 0.2s; }
 .sparkline { display: inline-block; width: 120px; height: 30px; margin-left: 10px; }
-
-/* --- Extra stats --- */
-.extra-stats {
-  margin-top: 20px;
-  display:flex;
-  justify-content:center;
-  gap:10px;
-}
-.extra-box {
-  width: 180px; height: 60px;
-  border:2px solid #00ffcc; border-radius:12px;
-  display:flex; flex-direction:column; justify-content:center; align-items:center;
-  background:#111; color:#00ffcc;
+.extra-stats { margin-top: 20px; display:flex; justify-content:center; gap:10px; }
+.extra-box { width: 180px; height: 60px; border:2px solid #00ffcc; border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#111; color:#00ffcc; 
 }
 .extra-title { font-size:12px; color:#14f0e8; margin-bottom:2px; }
 .extra-value { font-size:14px; font-weight:bold; }
@@ -126,7 +48,7 @@ h1 {
   </div>
   <div class="stat-box">
     <div class="stat-title">Pot Wallet Treasury 💰</div>
-    <div class="stat-value" id="potWallet">0.1 SOL</div>
+    <div class="stat-value" id="potWallet">0.0 SOL</div>
   </div>
   <div class="stat-box">
     <div class="stat-title">Time Left to Reward ⏰</div>
@@ -221,7 +143,6 @@ async function fetchLeaderboard(){
     row.style.marginBottom='5px';
 
     const leftDiv = document.createElement('div');
-
     const shortWallet = p.wallet.slice(0,4)+'...'+p.wallet.slice(-4);
     const walletSpan = document.createElement('span');
     walletSpan.className='wallet';
@@ -257,11 +178,20 @@ async function fetchLeaderboard(){
     top20.length>0 ? top20[0].wallet.slice(0,4)+'...'+top20[0].wallet.slice(-4)+' — '+top20[0].score : 'N/A');
   pulseValue(document.getElementById('totalPlays'),totalPlays);
   pulseValue(document.getElementById('totalPlayers'),playersSet.size);
+}
 
-  if(top20.length>0 && top20[0].wallet !== lastHero){
-    lastHero = top20[0].wallet;
-    document.getElementById('heroSound').play();
-  }
+async function fetchPotBalance(){
+  try {
+    const res = await fetch('/pot-balance');
+    const data = await res.json();
+    pulseValue(document.getElementById('potWallet'), `${data.balance} SOL`);
+    
+    // Toplam rewards
+    const resRewards = await fetch('/rewards');
+    const rewardsData = await resRewards.json();
+    const totalRewardsSol = rewardsData.reduce((acc,r)=>acc+(r.lamports||0),0).toFixed(1);
+    pulseValue(document.getElementById('totalRewards'), `${totalRewardsSol} SOL`);
+  } catch(e){ console.error(e) }
 }
 
 function updateTimeLeft(){
@@ -276,15 +206,13 @@ function updateTimeLeft(){
 
   pulseValue(document.getElementById('timeLeft'),
     `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`);
-
-  if(diff<=0){
-    fetchLeaderboard();
-  }
 }
 
 fetchLeaderboard();
+fetchPotBalance();
 updateTimeLeft();
 setInterval(fetchLeaderboard,10000);
+setInterval(fetchPotBalance,60*1000); // her dakika güncelle
 setInterval(updateTimeLeft,1000);
 </script>
 </body>
