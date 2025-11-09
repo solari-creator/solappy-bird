@@ -17,8 +17,7 @@
       color: #00ffcc;
       text-shadow: 0 0 10px #00ffcc;
     }
-
-    /* --- Rows --- */
+    /* Rows */
     .stats-row {
       display: flex;
       justify-content: center;
@@ -26,8 +25,7 @@
       margin-top: 20px;
       flex-wrap: wrap;
     }
-
-    /* --- Stat Boxes --- */
+    /* Stat Boxes */
     .stat-box {
       width: 150px;
       height: 80px;
@@ -43,38 +41,28 @@
       text-align: center;
       transition: transform 0.2s, box-shadow 0.3s, border-color 0.3s;
     }
-
-    /* --- Hero Box --- */
     #heroOfDayBox {
       border-color: #ffcc00;
       animation: heroPulse 2s infinite alternate;
     }
-
     @keyframes heroPulse {
       0% { box-shadow: 0 0 10px #ffcc00aa, 0 0 20px #ffcc00aa; }
       50% { box-shadow: 0 0 25px #ffcc00ee, 0 0 50px #ffcc00ee; }
       100% { box-shadow: 0 0 10px #ffcc00aa, 0 0 20px #ffcc00aa; }
     }
-
-    /* --- Neon Glow Hover Effect --- */
     .stat-box:hover {
       transform: scale(1.05);
       border-color: #14f0e8;
       box-shadow: 0 0 20px #14f0e8aa, 0 0 40px #14f0e8aa, 0 0 60px #14f0e8aa;
     }
-
-    /* --- Pulse animation for value changes --- */
     .pulse {
       animation: pulseAnim 0.5s ease-out;
     }
-
     @keyframes pulseAnim {
       0% { color: #00ffcc; text-shadow: 0 0 5px #00ffcc; }
       50% { color: #14f0e8; text-shadow: 0 0 15px #14f0e8; }
       100% { color: #00ffcc; text-shadow: 0 0 5px #00ffcc; }
     }
-
-    /* --- Titles & Values --- */
     .stat-title {
       font-size: 12px;
       color: #14f0e8;
@@ -84,8 +72,7 @@
       font-size: 16px;
       font-weight: bold;
     }
-
-    /* --- Leaderboard --- */
+    /* Leaderboard */
     .leaderboard {
       margin-top: 30px;
       display: inline-block;
@@ -94,37 +81,62 @@
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px #00ffcc55;
+      min-width: 500px;
+    }
+    .player {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
     }
     .top3 {
       color: #ffcc00;
       font-weight: bold;
       animation: top3Pulse 1.5s infinite alternate;
     }
-
     @keyframes top3Pulse {
       0% { text-shadow: 0 0 5px #ffcc00; }
       50% { text-shadow: 0 0 20px #ffcc00; }
       100% { text-shadow: 0 0 5px #ffcc00; }
     }
-
     .wallet {
       font-size: 14px;
       color: #ffffff;
+      cursor: pointer;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .wallet:hover::after {
+      content: attr(data-full);
+      position: absolute;
+      background: #000;
+      color: #0ff;
+      padding: 2px 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+      margin-left: 5px;
+      font-size: 12px;
+      z-index: 10;
     }
     .reward {
       color: #ff6666;
       font-size: 14px;
       margin-top: 10px;
     }
-
-    /* --- Flying SOL effect --- */
+    .sparkline {
+      width: 60px;
+      height: 20px;
+      margin-left: 5px;
+    }
+    /* Flying SOL */
     .solIcon {
       position: absolute;
       font-size: 20px;
       animation: flySol 2s forwards;
       pointer-events: none;
     }
-
     @keyframes flySol {
       0% { transform: translateY(0) scale(1); opacity: 1; }
       100% { transform: translateY(-150px) scale(0.5); opacity: 0; }
@@ -134,7 +146,7 @@
 <body>
   <h1>🏆 Solappy Daily Leaderboard 🏆</h1>
 
-  <!-- --- Top Stats Row --- -->
+  <!-- Stats Row -->
   <div class="stats-row">
     <div class="stat-box" id="heroOfDayBox">
       <div class="stat-title">Hero of the Day</div>
@@ -149,8 +161,6 @@
       <div class="stat-value" id="totalPlayers">0</div>
     </div>
   </div>
-
-  <!-- --- Bottom Stats Row --- -->
   <div class="stats-row">
     <div class="stat-box">
       <div class="stat-title">Time Left Today</div>
@@ -158,7 +168,7 @@
     </div>
     <div class="stat-box">
       <div class="stat-title">Pot Wallet</div>
-      <div class="stat-value" id="potWallet">Loading...</div>
+      <div class="stat-value" id="potWallet">0.1 SOL</div>
     </div>
     <div class="stat-box">
       <div class="stat-title">Total Rewards Distributed</div>
@@ -171,7 +181,11 @@
   <h2>💰 Latest Rewards</h2>
   <div id="rewards">Loading rewards...</div>
 
+  <audio id="heroSound" src="https://actions.google.com/sounds/v1/cartoon/coin_drop.ogg"></audio>
+
   <script>
+    let lastHero = '';
+
     function pulseValue(el, newValue) {
       if(el.textContent!==newValue){
         el.textContent=newValue;
@@ -193,6 +207,26 @@
       }
     }
 
+    function drawSparkline(canvas, scores){
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if(!scores || !scores.length) return;
+      const max = Math.max(...scores);
+      const min = Math.min(...scores);
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.strokeStyle = '#00ffcc';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      scores.forEach((v,i)=>{
+        const x = i/(scores.length-1)*w;
+        const y = h - ((v-min)/(max-min||1))*h;
+        if(i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+    }
+
     async function fetchLeaderboard(){
       const res=await fetch('/scores');
       const data=await res.json();
@@ -200,18 +234,32 @@
       const leaderboard=document.getElementById('leaderboard');
       leaderboard.innerHTML='';
 
-      data.forEach((p,i)=>{
+      data.slice(0,20).forEach((p,i)=>{
         const div=document.createElement('div');
         div.classList.add('player');
         if(i<3) div.classList.add('top3');
-        div.innerHTML=`#${i+1} — Wallet: <span class="wallet">${p.wallet}</span> — Score: ${p.score}`;
+        const walletShort = p.wallet.slice(0,6)+'...'+p.wallet.slice(-4);
+        div.innerHTML = `#${i+1} — Wallet: <span class="wallet" data-full="${p.wallet}" title="${p.wallet}">${walletShort}</span> — Score: ${p.score} `;
+        const canvas = document.createElement('canvas');
+        canvas.className='sparkline';
+        canvas.width=60; canvas.height=20;
+        drawSparkline(canvas,p.lastScores || []);
+        div.appendChild(canvas);
         leaderboard.appendChild(div);
       });
 
       // Hero of the day, total plays, total players
-      pulseValue(document.getElementById('heroOfDay'), data.length>0?`${data[0].wallet} — ${data[0].score}`:'N/A');
+      const heroWallet = data.length>0 ? data[0].wallet : 'N/A';
+      const heroDisplay = data.length>0 ? data[0].wallet.slice(0,6)+'...'+data[0].wallet.slice(-4)+' — '+data[0].score : 'N/A';
+      if(heroWallet !== lastHero && lastHero!==''){
+        document.getElementById('heroSound').play();
+      }
+      lastHero = heroWallet;
+      pulseValue(document.getElementById('heroOfDay'),heroDisplay);
+
       pulseValue(document.getElementById('totalPlays'), data.reduce((sum,p)=>sum+(p.plays||1),0));
-      pulseValue(document.getElementById('totalPlayers'), data.length);
+      const uniquePlayers = [...new Set(data.map(p=>p.wallet))];
+      pulseValue(document.getElementById('totalPlayers'), uniquePlayers.length);
     }
 
     async function fetchRewards(){
@@ -235,14 +283,6 @@
       });
     }
 
-    async function fetchPotAndRewards(){
-      const res=await fetch('/pot');
-      const data=await res.json();
-
-      pulseValue(document.getElementById('potWallet'), data.wallet||'N/A');
-      pulseValue(document.getElementById('totalRewards'), (data.totalRewards/1_000_000).toFixed(3)+' SOL');
-    }
-
     function updateTimeLeft(){
       const now=new Date();
       const tomorrow=new Date();
@@ -259,13 +299,12 @@
 
     fetchLeaderboard();
     fetchRewards();
-    fetchPotAndRewards();
     updateTimeLeft();
 
     setInterval(fetchLeaderboard,10000);
     setInterval(fetchRewards,15000);
-    setInterval(fetchPotAndRewards,15000);
     setInterval(updateTimeLeft,1000);
+
   </script>
 </body>
 </html>
