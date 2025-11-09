@@ -209,11 +209,10 @@
 
     async function fetchLeaderboard() {
       const res = await fetch('/scores');
-      const data = await res.json();
+      const data = await res.json(); // backend şimdi tüm bugünkü skorları döndürmeli
       const leaderboard = document.getElementById('leaderboard');
       leaderboard.innerHTML = '';
 
-      // --- total stats from full data
       let totalPlays = 0;
       const playersSet = new Set();
 
@@ -222,8 +221,9 @@
         playersSet.add(p.wallet);
       });
 
-      // --- render only top 20
-      data.slice(0, 20).forEach((p, i) => {
+      // --- Render top 20 dynamically ---
+      const top20 = [...data].sort((a, b) => b.score - a.score).slice(0, 20);
+      top20.forEach((p, i) => {
         const div = document.createElement('div');
         div.classList.add('player');
         if (i < 3) div.classList.add('top3');
@@ -259,7 +259,7 @@
       });
 
       pulseValue(document.getElementById('heroOfDay'),
-        data.length > 0 ? data[0].wallet.slice(0, 4) + '...' + data[0].wallet.slice(-4) + ' — ' + data[0].score : 'N/A');
+        data.length > 0 ? data[0].wallet.slice(0,4) + '...' + data[0].wallet.slice(-4) + ' — ' + data[0].score : 'N/A');
       pulseValue(document.getElementById('totalPlays'), totalPlays);
       pulseValue(document.getElementById('totalPlayers'), playersSet.size);
 
@@ -272,19 +272,19 @@
     function updateTimeLeft() {
       const now = new Date();
       const tomorrow = new Date();
-      tomorrow.setHours(24, 0, 0, 0);
+      tomorrow.setHours(24,0,0,0);
       const diff = tomorrow - now;
 
-      const hours = Math.floor(diff / 1000 / 60 / 60);
-      const minutes = Math.floor((diff / 1000 / 60) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
+      const hours = Math.floor(diff/1000/60/60);
+      const minutes = Math.floor((diff/1000/60)%60);
+      const seconds = Math.floor((diff/1000)%60);
 
       pulseValue(
         document.getElementById('timeLeft'),
-        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`
       );
 
-      // --- Reset at midnight
+      // Reset at midnight
       if (diff <= 0) {
         fetchLeaderboard();
       }
