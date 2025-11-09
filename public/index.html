@@ -1,135 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solappy Leaderboard</title>
-  <style>
-    body {
-      font-family: monospace;
-      background-color: #0d0d0d;
-      color: #00ffcc;
-      text-align: center;
-      padding: 20px;
-      overflow-x: hidden;
-    }
-    h1 {
-      color: #00ffcc;
-      text-shadow: 0 0 10px #00ffcc;
-    }
-    .stats-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-    .stat-box {
-      width: 150px;
-      height: 80px;
-      border: 2px solid #00ffcc;
-      border-radius: 12px;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background-color: #111;
-      color: #00ffcc;
-      transition: transform 0.2s, box-shadow 0.3s;
-    }
-    #heroOfDayBox {
-      border-color: #ffcc00;
-      animation: heroPulse 2s infinite alternate;
-    }
-    @keyframes heroPulse {
-      0% { box-shadow: 0 0 10px #ffcc00aa; }
-      50% { box-shadow: 0 0 25px #ffcc00ee; }
-      100% { box-shadow: 0 0 10px #ffcc00aa; }
-    }
-    .stat-box:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px #14f0e8aa;
-    }
-    .pulse {
-      animation: pulseAnim 0.5s ease-out;
-    }
-    @keyframes pulseAnim {
-      0%,100% { color: #00ffcc; }
-      50% { color: #14f0e8; text-shadow: 0 0 15px #14f0e8; }
-    }
-    .stat-title {
-      font-size: 12px;
-      color: #14f0e8;
-      margin-bottom: 5px;
-    }
-    .stat-value {
-      font-size: 16px;
-      font-weight: bold;
-    }
-    .leaderboard {
-      margin-top: 30px;
-      display: inline-block;
-      text-align: left;
-      border: 1px solid #00ffcc;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 15px #00ffcc55;
-      max-width: 500px;
-    }
-    .top3 {
-      color: #ffcc00;
-      font-weight: bold;
-      animation: top3Pulse 1.5s infinite alternate;
-    }
-    @keyframes top3Pulse {
-      0% { text-shadow: 0 0 5px #ffcc00; }
-      50% { text-shadow: 0 0 20px #ffcc00; }
-      100% { text-shadow: 0 0 5px #ffcc00; }
-    }
-    .wallet {
-      font-size: 14px;
-      color: #fff;
-      cursor: pointer;
-      position: relative;
-    }
-    .wallet::after {
-      content: '';
-      position: absolute;
-      display: none;
-    }
-    .wallet:hover::after {
-      content: attr(data-full);
-      display: block;
-      position: absolute;
-      background: #111;
-      border: 1px solid #00ffcc;
-      border-radius: 5px;
-      padding: 5px;
-      color: #00ffcc;
-      top: 20px;
-      left: 0;
-      white-space: nowrap;
-      z-index: 10;
-    }
-    .copied {
-      position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #00ffcc;
-      color: black;
-      padding: 2px 5px;
-      border-radius: 4px;
-      font-size: 12px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .sparkline {
-      display: block;
-      margin-top: 5px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solappy Leaderboard</title>
+<style>
+body {
+  font-family: monospace;
+  background-color: #0d0d0d;
+  color: #00ffcc;
+  text-align: center;
+  padding: 20px;
+  overflow-x: hidden;
+}
+h1 {
+  color: #00ffcc;
+  text-shadow: 0 0 10px #00ffcc;
+}
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.stat-box {
+  width: 150px;
+  height: 80px;
+  border: 2px solid #00ffcc;
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #111;
+  color: #00ffcc;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+#heroOfDayBox {
+  border-color: #ffcc00;
+  animation: heroPulse 2s infinite alternate;
+}
+@keyframes heroPulse {
+  0% { box-shadow: 0 0 10px #ffcc00aa; }
+  50% { box-shadow: 0 0 25px #ffcc00ee; }
+  100% { box-shadow: 0 0 10px #ffcc00aa; }
+}
+.stat-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #14f0e8aa;
+}
+.pulse {
+  animation: pulseAnim 0.5s ease-out;
+}
+@keyframes pulseAnim {
+  0%,100% { color: #00ffcc; }
+  50% { color: #14f0e8; text-shadow: 0 0 15px #14f0e8; }
+}
+.stat-title {
+  font-size: 12px;
+  color: #14f0e8;
+  margin-bottom: 5px;
+}
+.stat-value {
+  font-size: 16px;
+  font-weight: bold;
+}
+.leaderboard {
+  margin-top: 30px;
+  display: inline-block;
+  text-align: left;
+  border: 1px solid #00ffcc;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px #00ffcc55;
+  max-width: 550px;
+}
+.leaderboard h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #00ffcc;
+  text-align: center;
+}
+.top3 {
+  color: #ffcc00;
+  font-weight: bold;
+  animation: top3Pulse 1.5s infinite alternate;
+}
+@keyframes top3Pulse {
+  0% { text-shadow: 0 0 5px #ffcc00; }
+  50% { text-shadow: 0 0 20px #ffcc00; }
+  100% { text-shadow: 0 0 5px #ffcc00; }
+}
+.player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+.wallet {
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  position: relative;
+}
+.wallet:hover::after {
+  content: attr(data-full);
+  position: absolute;
+  background: #111;
+  border: 1px solid #00ffcc;
+  border-radius: 5px;
+  padding: 5px;
+  color: #00ffcc;
+  top: 20px;
+  left: 0;
+  white-space: nowrap;
+  z-index: 10;
+}
+.copied {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #00ffcc;
+  color: black;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.sparkline {
+  display: inline-block;
+  width: 120px;
+  height: 30px;
+  margin-left: 10px;
+}
+</style>
 </head>
 <body>
 <h1>🏆 Solappy Daily Leaderboard 🏆</h1>
@@ -164,7 +172,11 @@
   </div>
 </div>
 
-<div id="leaderboard" class="leaderboard">Loading leaderboard...</div>
+<div id="leaderboard" class="leaderboard">
+  <h2>🏅 Top 20 Players</h2>
+  Loading leaderboard...
+</div>
+
 <audio id="heroSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9a4b5f285d.mp3?filename=success-1-6297.mp3"></audio>
 
 <script>
@@ -200,28 +212,26 @@ async function fetchLeaderboard(){
   const res = await fetch('/scores');
   const data = await res.json();
   const leaderboard = document.getElementById('leaderboard');
-  leaderboard.innerHTML = '';
+  leaderboard.innerHTML = '<h2>🏅 Top 20 Players</h2>';
 
   let totalPlays = 0;
   const playersSet = new Set();
-
-  // Wallet -> oynadığı oyun sayısı ve skor array
   const walletMap = {};
-  data.forEach(p => {
+
+  data.forEach(p=>{
     totalPlays += p.plays || 1;
     if(!walletMap[p.wallet]){
-      walletMap[p.wallet] = {score: p.score, plays: p.plays || 1, lastScores: p.lastScores || [p.score]};
+      walletMap[p.wallet] = {score: p.score, plays: p.plays||1, lastScores: p.lastScores||[p.score]};
     } else {
-      walletMap[p.wallet].score = Math.max(walletMap[p.wallet].score, p.score);
-      walletMap[p.wallet].plays += p.plays || 1;
+      walletMap[p.wallet].score = Math.max(walletMap[p.wallet].score,p.score);
+      walletMap[p.wallet].plays += p.plays||1;
       walletMap[p.wallet].lastScores.push(p.score);
     }
     playersSet.add(p.wallet);
   });
 
-  // Top 20 by highest score
   const top20 = Object.entries(walletMap)
-    .map(([wallet, val]) => ({wallet, ...val}))
+    .map(([wallet,val])=>({wallet,...val}))
     .sort((a,b)=>b.score - a.score)
     .slice(0,20);
 
@@ -245,21 +255,27 @@ async function fetchLeaderboard(){
         walletSpan.appendChild(copied);
         setTimeout(()=>copied.style.opacity=1,10);
         setTimeout(()=>{copied.style.opacity=0; copied.remove()},800);
-      }).catch(e=>console.log('Copy failed',e));
+      });
     });
 
-    div.innerHTML=`#${i+1} — Wallet: `;
-    div.appendChild(walletSpan);
-    div.innerHTML += ` — Score: ${p.score}`;
+    const leftDiv = document.createElement('div');
+    leftDiv.appendChild(walletSpan);
+    leftDiv.innerHTML += ` — Score: ${p.score}`;
 
     const canvas = document.createElement('canvas');
     canvas.classList.add('sparkline');
-    canvas.width = 150;
+    canvas.width = 120;
     canvas.height = 30;
-    div.appendChild(canvas);
-    leaderboard.appendChild(div);
+    drawSparkline(canvas,p.lastScores);
 
-    drawSparkline(canvas, p.lastScores);
+    const row = document.createElement('div');
+    row.style.display='flex';
+    row.style.justifyContent='space-between';
+    row.style.alignItems='center';
+    row.appendChild(leftDiv);
+    row.appendChild(canvas);
+
+    leaderboard.appendChild(row);
   });
 
   pulseValue(document.getElementById('heroOfDay'),
@@ -287,7 +303,7 @@ function updateTimeLeft(){
     `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`);
 
   if(diff<=0){
-    fetchLeaderboard(); // reset at midnight
+    fetchLeaderboard();
   }
 }
 
