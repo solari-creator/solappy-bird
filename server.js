@@ -1,55 +1,57 @@
-import express from 'express'
-import cors from 'cors'
-import bodyParser from 'body-parser'
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
 
-const app = express()
-const PORT = process.env.PORT || 5050
+const app = express();
+const PORT = process.env.PORT || 5050;
 
 // Middleware
-app.use(cors())
-app.use(bodyParser.json())
-app.use(express.static('public')) // public/index.html'i sun
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('public'));
 
 // In-memory storage
-let scores = [] // { wallet, score, date, plays, lastScores: [] }
-let rewards = [] // { wallet, lamports, date }
+let scores = []; // { wallet, date, plays, lastScores, score }
+let rewards = []; // { wallet, lamports, date }
 
-// Skor gönderme endpoint
+// Submit score
 app.post('/score', (req, res) => {
-  const { wallet, score } = req.body
-  if (!wallet || typeof score !== 'number') return res.status(400).json({ error: 'Wallet or score missing/invalid' })
+  const { wallet, score } = req.body;
+  if (!wallet || typeof score !== 'number') return res.status(400).json({ error: 'Wallet or score missing/invalid' });
 
-  const today = new Date().toISOString().slice(0, 10)
-  const existing = scores.find(s => s.wallet === wallet && s.date === today)
+  const today = new Date().toISOString().slice(0, 10);
 
-  if (existing) {
-    existing.score = Math.max(existing.score, score)
-    existing.plays += 1
-    existing.lastScores.push(score)
-  } else {
-    scores.push({ wallet, score, date: today, plays: 1, lastScores: [score] })
+  let entry = scores.find(s => s.wallet === wallet && s.date === today);
+  if (!entry) {
+    entry = { wallet, date: today, plays: 0, lastScores: [], score: 0 };
+    scores.push(entry);
   }
 
-  res.json({ success: true })
-})
+  entry.plays += 1;
+  entry.lastScores.push(score);
+  entry.score = Math.max(entry.score, score);
 
-// Leaderboard endpoint (top 20 by highest score)
+  res.json({ success: true });
+});
+
+// Leaderboard
 app.get('/scores', (req, res) => {
-  const today = new Date().toISOString().slice(0, 10)
-  const todayScores = scores.filter(s => s.date === today)
-  const sorted = todayScores.sort((a, b) => b.score - a.score)
-  res.json(sorted.slice(0, 20))
-})
+  const today = new Date().toISOString().slice(0, 10);
+  const todayScores = scores.filter(s => s.date === today);
+  const sorted = todayScores.sort((a, b) => b.score - a.score);
+  res.json(sorted.slice(0, 20));
+});
 
-// Rewards endpoint
-app.get('/rewards', (req, res) => res.json(rewards))
+// Rewards
+app.get('/rewards', (req, res) => {
+  res.json(rewards);
+});
 
-// Örnek reward ekleme
 app.post('/reward', (req, res) => {
-  const { wallet, lamports } = req.body
-  if (!wallet || !lamports) return res.status(400).json({ error: 'Missing wallet or lamports' })
-  rewards.push({ wallet, lamports, date: new Date().toISOString() })
-  res.json({ success: true })
-})
+  const { wallet, lamports } = req.body;
+  if (!wallet || !lamports) return res.status(400).json({ error: 'Missing wallet or lamports' });
+  rewards.push({ wallet, lamports, date: new Date().toISOString() });
+  res.json({ success: true });
+});
 
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`))
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
