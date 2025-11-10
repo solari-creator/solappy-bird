@@ -9,11 +9,15 @@ import dotenv from 'dotenv'
 import { Connection, PublicKey, Keypair, LAMPORTS_PER_SOL, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js'
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
+// ⚠️ YENİ EKLEME: fetch API'sini kullanmak için
+import fetch from 'node-fetch'; 
 
 dotenv.config() // .env yükle
 
 const app = express()
 const PORT = process.env.PORT || 5050
+
+// ... (Geri kalan kod blokları aynı kalır) ...
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -74,13 +78,42 @@ function verifyAdmin(req,res,next){
   next()
 }
 
-// 📩 Skor gönderme endpoint
+// 📩 Skor gönderme endpoint (YENİ GÜVENLİK YÖNLENDİRMESİ)
 app.post('/score', async (req,res)=>{
   const {wallet,score} = req.body
   if(!wallet || typeof score!=='number') return res.status(400).json({error:'Wallet or score missing/invalid'})
-  const today = new Date().toISOString().slice(0,10)
-  await db.run('INSERT INTO scores (wallet, score, date) VALUES (?, ?, ?)', [wallet,score,today])
-  res.json({success:true})
+  
+  // 🚨 1. ADIM: Gelen skoru güvenli Python/Flask API'ye ilet
+  const PYTHON_API_URL = "https://solappy-score-api.onrender.com/save_score"; 
+
+  try{
+      const pythonResponse = await fetch(PYTHON_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // Python API 'player' beklediği için 'wallet' yerine 'player' gönderilir
+          body: JSON.stringify({ player: wallet, score: score }) 
+      });
+
+      const pythonData = await pythonResponse.json();
+
+      if(!pythonResponse.ok){
+          // Eğer Python API HMAC doğrulamayı geçemezse, skoru reddet
+          console.error(`❌ Python API rejected score for ${wallet}. Details:`, pythonData.message);
+          return res.status(401).json({ error: 'Score validation failed on secure backend.', details: pythonData.message });
+      }
+
+      // 2. ADIM: Python API'den onay aldıktan sonra kendi DB'mize kaydet (ödül mantığı için)
+      const today = new Date().toISOString().slice(0,10)
+      await db.run('INSERT INTO scores (wallet, score, date) VALUES (?, ?, ?)', [wallet,score,today])
+      
+      console.log(`✅ Score accepted and recorded for ${wallet}. Secure validation success.`);
+      res.json({success:true, message:"Score validated and recorded."});
+
+  } catch(err) {
+      console.error('❌ Error forwarding score to Python API:', err.message);
+      // Ağ hatası veya başka bir sorun oluşursa
+      res.status(500).json({ error: 'Internal Server Error during validation.', details: err.message });
+  }
 })
 
 // 📊 Leaderboard endpoint
@@ -156,3 +189,4 @@ cron.schedule('59 23 * * *', async ()=>{
 
 // 🚀 Server başlat
 app.listen(PORT,()=>console.log(`✅ Server running on port ${PORT}`))
+
