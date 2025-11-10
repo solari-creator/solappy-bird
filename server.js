@@ -104,14 +104,15 @@ let potBalance={pot_wallet:POT_WALLET.toBase58(), balance:'0.000', reward:'0.0'}
 async function updatePotBalance(){
   try{
     const balanceLamports = await connection.getBalance(POT_WALLET)
-    const balanceSol = balanceLamports / LAMPORTS_PER_SOL
-    const rewardAmount = Math.floor(balanceSol*10)/10
-    potBalance={pot_wallet:POT_WALLET.toBase58(), balance:balanceSol.toFixed(3), reward:rewardAmount.toFixed(1)}
+let balanceSol = balanceLamports / LAMPORTS_PER_SOL
+balanceSol = Math.floor(balanceSol*10)/10 // 0.1 adımlarına yuvarla
+const rewardAmount = balanceSol.toFixed(1)
+potBalance = { pot_wallet: POT_WALLET.toBase58(), balance: balanceSol.toFixed(1), reward: rewardAmount }
     console.log(`🔄 Pot wallet updated: ${potBalance.balance} SOL, reward: ${potBalance.reward} SOL`)
   }catch(err){ console.error('❌ Pot wallet fetch error:',err) }
 }
 updatePotBalance()
-setInterval(updatePotBalance,60*60*1000)
+setInterval(updatePotBalance,60*1000)
 
 // 📡 Endpoint artık saklanan güncel değeri döndürüyor
 app.get('/pot-balance',(req,res)=>res.json(potBalance))
