@@ -30,15 +30,21 @@ transition: transform 0.2s, box-shadow 0.3s; position:relative; }
 @keyframes top3Pulse {0%{text-shadow:0 0 5px #ffcc00} 50%{text-shadow:0 0 20px #ffcc00} 100%{text-shadow:0 0 5px #ffcc00;}}
 .player { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
 .wallet { font-size:14px; color:#fff; cursor:pointer; position:relative; }
-.wallet:hover::after { content:attr(data-full) " | Plays: " attr(data-plays) " | Raw: " attr(data-score) " | Fair: " attr(data-fair); position:absolute; background:#111; border:1px solid #00ffcc; 
+.wallet:hover::after { content:attr(data-full) " | Plays: " attr(data-plays) " | Raw: " attr(data-score) " / Fair: " attr(data-fair); position:absolute; background:#111; border:1px solid #00ffcc; 
 border-radius:5px; padding:5px; color:#00ffcc; top:20px; left:0; white-space:nowrap; z-index:10; }
 .copied { position:absolute; top:-20px; left:50%; transform:translateX(-50%); background:#00ffcc; color:black; padding:2px 5px; border-radius:4px; font-size:12px; opacity:0; transition:opacity 0.2s; }
+.sparkline { display:inline-block; width:120px; height:30px; margin-left:10px; }
 .extra-stats { margin-top:20px; display:flex; justify-content:center; gap:10px; }
 .extra-box { width:180px; height:60px; border:2px solid #00ffcc; border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#111; color:#00ffcc; }
 .extra-title { font-size:12px; color:#14f0e8; margin-bottom:2px; }
 .extra-value { font-size:14px; font-weight:bold; }
 .progress-bar { width:100%; background:#222; border-radius:8px; overflow:hidden; height:12px; margin-top:5px; }
 .progress-fill { background:#14f0e8; height:100%; width:0%; transition: width 1s ease; }
+#winners { margin-top:40px; border:1px solid #00ffcc; border-radius:8px; padding:15px; background:#111; max-width:700px; display:inline-block; text-align:left; box-shadow:0 0 15px #00ffcc55; }
+#winners table { width:100%; border-collapse:collapse; }
+#winners th, #winners td { border-bottom:1px solid #333; padding:8px; font-size:13px; color:#00ffcc; }
+#winners th { text-align:left; color:#14f0e8; }
+a { color:#14f0e8; text-decoration:none; }
 </style>
 </head>
 <body>
@@ -101,43 +107,23 @@ border-radius:5px; padding:5px; color:#00ffcc; top:20px; left:0; white-space:now
 <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
 
 <script>
-let currentRange='daily', lastHero=null
 const confettiCanvas=document.getElementById('confettiCanvas')
 const confettiCtx=confettiCanvas.getContext('2d')
 confettiCanvas.width=window.innerWidth
 confettiCanvas.height=window.innerHeight
 let confettiParticles=[]
+function createConfetti(count=100){for(let 
+i=0;i<count;i++){confettiParticles.push({x:Math.random()*confettiCanvas.width,y:Math.random()*confettiCanvas.height,r:Math.random()*6+4,d:Math.random()*50+10,color:`hsl(${Math.random()*360},100%,50%)`,tilt:Math.random()*10-5,tiltAngleIncrement:Math.random()*0.07+0.05})}}
+function 
+drawConfetti(){confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);confettiParticles.forEach(p=>{confettiCtx.beginPath();confettiCtx.lineWidth=p.r/2;confettiCtx.strokeStyle=p.color;confettiCtx.moveTo(p.x+p.tilt+p.r/4,p.y);confettiCtx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/4);confettiCtx.stroke()});confettiParticles.forEach(p=>{p.tiltAngle+=p.tiltAngleIncrement;p.y+=(Math.cos(p.d)+3+p.r/2)/2;p.x+=Math.sin(p.tiltAngle);if(p.y>confettiCanvas.height){p.y=-10;p.x=Math.random()*confettiCanvas.width}});requestAnimationFrame(drawConfetti)}
+function pulseValue(el,newValue){if(el.textContent!==newValue){el.textContent=newValue;el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse')}}
 
-function createConfetti(count=100){
-  for(let i=0;i<count;i++){confettiParticles.push({
-    x:Math.random()*confettiCanvas.width,
-    y:Math.random()*confettiCanvas.height,
-    r:Math.random()*6+4,
-    d:Math.random()*50+10,
-    color:`hsl(${Math.random()*360},100%,50%)`,
-    tilt:Math.random()*10-5,
-    tiltAngleIncrement:Math.random()*0.07+0.05
-  })}
-}
+function drawSparkline(canvas,data){if(!data||!data.length) return; const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); const max=Math.max(...data), 
+min=Math.min(...data); ctx.beginPath(); data.forEach((v,i)=>{const x=(i/(data.length-1))*canvas.width; const y=canvas.height-((v-min)/(max-min))*canvas.height; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}); 
+const color=data[data.length-1]>=data[data.length-2]?'#00ff00':'#ff4d4d'; ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke(); canvas.className='sparkline '+(color=='#00ff00'?'green':'red')}
 
-function drawConfetti(){
-  confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height)
-  confettiParticles.forEach(p=>{
-    confettiCtx.beginPath()
-    confettiCtx.lineWidth=p.r/2
-    confettiCtx.strokeStyle=p.color
-    confettiCtx.moveTo(p.x+p.tilt+p.r/4,p.y)
-    confettiCtx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/4)
-    confettiCtx.stroke()
-  })
-  confettiParticles.forEach(p=>{
-    p.tiltAngle+=p.tiltAngleIncrement
-    p.y+=(Math.cos(p.d)+3+p.r/2)/2
-    p.x+=Math.sin(p.tiltAngle)
-    if(p.y>confettiCanvas.height){p.y=-10;p.x=Math.random()*confettiCanvas.width}
-  })
-  requestAnimationFrame(drawConfetti)
-}
+let currentRange='daily'
+let lastHero=null
 
 function fairScore(raw,plays){return Math.round(raw/(1+Math.log(plays+1)*0.25))}
 
@@ -147,36 +133,44 @@ async function fetchLeaderboard(range=currentRange){
     const data=await res.json()
     const leaderboard=document.getElementById('leaderboard')
     leaderboard.innerHTML='<h2>🏅 Top 20 Players</h2>'
-    const walletMap={}
+    const agg={}
     data.forEach(s=>{
-      if(!walletMap[s.wallet]) walletMap[s.wallet]={rawScore:s.score,plays:1,lastScores:[s.score]}
-      else { walletMap[s.wallet].rawScore=Math.max(walletMap[s.wallet].rawScore,s.score); walletMap[s.wallet].plays++; walletMap[s.wallet].lastScores.push(s.score) }
+      if(!agg[s.wallet]) agg[s.wallet]={rawScore:s.rawScore,plays:s.plays,lastScores:[s.rawScore]}
+      else{agg[s.wallet].rawScore=Math.max(agg[s.wallet].rawScore,s.rawScore); agg[s.wallet].plays+=s.plays; agg[s.wallet].lastScores.push(s.rawScore)}
     })
-    const list=Object.entries(walletMap).map(([wallet,val])=>{
+    const list=Object.entries(agg).map(([wallet,val])=>{
       const fair=fairScore(val.rawScore,val.plays)
       return {wallet,raw:val.rawScore,plays:val.plays,fair,lastScores:val.lastScores}
     }).sort((a,b)=>b.fair-a.fair).slice(0,20)
 
     list.forEach((p,i)=>{
-      const row=document.createElement('div'); row.className='player'
+      const row=document.createElement('div')
+      row.className='player'
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.marginBottom='5px'
+
       const left=document.createElement('div')
       const short=p.wallet.slice(0,4)+'...'+p.wallet.slice(-4)
-      left.innerHTML=`${short} (${p.plays}) — Raw:${p.raw} / Fair:${p.fair}`
+      const walletSpan=document.createElement('span')
+      walletSpan.className='wallet'
+      walletSpan.textContent=`${short} (${p.plays}) — Raw:${p.raw} / Fair:${p.fair}`
+      walletSpan.dataset.full=p.wallet
+      walletSpan.dataset.plays=p.plays
+      walletSpan.dataset.score=p.raw
+      walletSpan.dataset.fair=p.fair
+      walletSpan.addEventListener('click',()=>{navigator.clipboard.writeText(p.wallet).then(()=>{
+        const copied=document.createElement('div'); copied.textContent='Copied!'; copied.className='copied'; walletSpan.appendChild(copied)
+        setTimeout(()=>copied.style.opacity=1,10); setTimeout(()=>{copied.style.opacity=0; copied.remove()},800)
+      })})
+      left.appendChild(walletSpan)
       if(i==0) left.classList.add('gold')
       else if(i==1) left.classList.add('silver')
       else if(i==2) left.classList.add('bronze')
-      else if(i<10) left.classList.add('top4to10')
-      const canvas=document.createElement('canvas'); canvas.width=120; canvas.height=30
-      const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height)
-      const max=Math.max(...p.lastScores), min=Math.min(...p.lastScores)
-      ctx.beginPath()
-      p.lastScores.forEach((v,idx)=>{
-        const x=(idx/(p.lastScores.length-1))*canvas.width
-        const y=canvas.height-((v-min)/(max-min))*canvas.height
-        idx===0?ctx.moveTo(x,y):ctx.lineTo(x,y)
-      })
-      ctx.strokeStyle=p.lastScores[p.lastScores.length-1]>=p.lastScores[p.lastScores.length-2]?'#00ff00':'#ff4d4d'
-      ctx.lineWidth=1.5; ctx.stroke()
+      else if(i>=3 && i<10) left.classList.add('top4to10')
+
+      const canvas=document.createElement('canvas')
+      canvas.width=120; canvas.height=30
+      drawSparkline(canvas,p.lastScores)
+
       row.appendChild(left)
       row.appendChild(canvas)
       leaderboard.appendChild(row)
@@ -184,48 +178,50 @@ async function fetchLeaderboard(range=currentRange){
 
     const hero=document.getElementById('hero')
     hero.textContent=list.length>0?list[0].wallet.slice(0,4)+'...'+list[0].wallet.slice(-4)+' — '+list[0].fair:'N/A'
-    document.getElementById('heroTitle').textContent=`Hero of the ${range.charAt(0).toUpperCase()+range.slice(1)} 🦸`
-    if(lastHero!==list[0]?.wallet && lastHero!==null){document.getElementById('heroSound').play(); createConfetti(100); drawConfetti()}
+    const heroTitle=document.getElementById('heroTitle')
+    heroTitle.textContent=`Hero of the ${range.charAt(0).toUpperCase()+range.slice(1)} 🦸`
+    if(lastHero!==list[0]?.wallet&&lastHero!==null){document.getElementById('heroSound').play();createConfetti(100);drawConfetti()}
     lastHero=list[0]?.wallet
   }catch(e){console.error(e)}
 }
 
 async function fetchTotals(){
-  try{const r=await fetch('/totals'); const d=await r.json()
-    document.getElementById('totalPlays').textContent=d.totalPlays
-    document.getElementById('totalPlayers').textContent=d.totalPlayers
-  }catch(e){console.error(e)}
+  try{const r=await fetch('/totals');const d=await 
+r.json();document.getElementById('totalPlays').textContent=d.totalPlays;document.getElementById('totalPlayers').textContent=d.totalPlayers}catch(e){console.error(e)}
 }
 
 async function fetchPot(){
   try{
-    const r=await fetch('/pot-balance'); const d=await r.json(); document.getElementById('potWallet').textContent=`${d.balance} SOL`
-    const r2=await fetch('/rewards'); const dr=await r2.json()
-    const tot=dr.reduce((a,b)=>a+(b.lamports||0),0).toFixed(1); document.getElementById('totalRewards').textContent=`${tot} SOL`
-    const wl=document.getElementById('winnerList'); wl.innerHTML=''
+    const r=await fetch('/pot-balance');const d=await r.json();document.getElementById('potWallet').textContent=`${d.balance} SOL`;
+    const r2=await fetch('/rewards');const dr=await r2.json();
+    const tot=dr.reduce((a,b)=>a+(b.lamports||0),0).toFixed(1);document.getElementById('totalRewards').textContent=`${tot} SOL`;
+    const wl=document.getElementById('winnerList');wl.innerHTML='';
     dr.reverse().slice(0,10).forEach(w=>{
-      const tr=document.createElement('tr'); tr.innerHTML=`<td>${new Date(w.date).toLocaleString()}</td><td>${w.wallet.slice(0,4)}...${w.wallet.slice(-4)}</td><td>${w.lamports}</td><td><a 
-href="https://solscan.io/tx/${w.tx}?cluster=mainnet" target="_blank">${w.tx?'View':'-'}</a></td>`; wl.appendChild(tr)
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${new Date(w.date).toLocaleString()}</td><td>${w.wallet.slice(0,4)}...${w.wallet.slice(-4)}</td><td>${w.lamports}</td><td><a 
+href="https://solscan.io/tx/${w.tx}?cluster=mainnet" target="_blank">${w.tx?'View':'-'}</a></td>`;
+      wl.appendChild(tr)
     })
   }catch(e){console.error(e)}
 }
 
 function updateTime(){
-  const now=new Date(); const nxt=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+1,0,0,0))
-  const diff=nxt-now
-  const h=Math.floor(diff/36e5), m=Math.floor(diff/6e4)%60, s=Math.floor(diff/1e3)%60
-  document.getElementById('timeLeft').textContent=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`
+  const now=new Date();const nxt=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+1,0,0,0));const diff=nxt-now;const 
+h=Math.floor(diff/36e5),m=Math.floor(diff/6e4)%60,s=Math.floor(diff/1e3)%60;
+  document.getElementById('timeLeft').textContent=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
   document.getElementById('timeProgress').style.width=`${(86400-diff/1000)/864}%`
 }
 
-document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'))
-  t.classList.add('active')
-  currentRange=t.dataset.range; lastHero=null; fetchLeaderboard(currentRange)
-}))
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');currentRange=t.dataset.range;lastHero=null;fetchLeaderboard(currentRange)}))
 
-fetchLeaderboard(); fetchTotals(); fetchPot(); updateTime()
-setInterval(fetchLeaderboard,10000); setInterval(fetchTotals,60000); setInterval(fetchPot,60000); setInterval(updateTime,1000)
+fetchLeaderboard()
+fetchTotals()
+fetchPot()
+updateTime()
+setInterval(fetchLeaderboard,10000)
+setInterval(fetchTotals,60000)
+setInterval(fetchPot,60000)
+setInterval(updateTime,1000)
 </script>
 </body>
 </html>
