@@ -2,18 +2,20 @@ import fs from 'fs';
 import { Connection, Keypair, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram, sendAndConfirmTransaction } from '@solana/web3.js';
 import cron from 'node-cron';
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // === 1️⃣ Solana bağlantısı ===
 const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
 
 // === 2️⃣ Pot wallet keypair ===
-const potSecret = JSON.parse(fs.readFileSync('./POT_WALLET.json', 'utf8'));
+const potSecret = JSON.parse(process.env.POT_KEY);
 const potWallet = Keypair.fromSecretKey(Uint8Array.from(potSecret));
 
 console.log('✅ Pot wallet loaded:', potWallet.publicKey.toBase58());
 
 // === 3️⃣ Günün birincisini getiren fonksiyon ===
-// Backend’in /scores endpoint’ini okuyup en yüksek skoru buluyor
 async function getDailyWinner() {
   try {
     const res = await fetch('https://solappy-bird.onrender.com/scores');
@@ -27,7 +29,6 @@ async function getDailyWinner() {
       }
     });
 
-    // Skor sıralaması
     const sorted = Object.entries(walletMap)
       .sort((a, b) => b[1] - a[1])
       .map(([wallet, score]) => ({ wallet, score }));
@@ -48,7 +49,7 @@ async function sendReward(winnerPubkey, amountSol) {
       SystemProgram.transfer({
         fromPubkey: potWallet.publicKey,
         toPubkey: new PublicKey(winnerPubkey),
-        lamports: amountSol * LAMPORTS_PER_SOL,
+        lamports: Math.round(amountSol * LAMPORTS_PER_SOL),
       })
     );
 
@@ -56,7 +57,6 @@ async function sendReward(winnerPubkey, amountSol) {
     console.log(`✅ Sent ${amountSol} SOL to ${winnerPubkey}`);
     console.log('Signature:', signature);
 
-    // Ödül geçmişini kaydet
     saveRewardHistory({ winner: winnerPubkey, tx: signature, amount: amountSol, time: new Date().toISOString() });
     return signature;
   } catch (e) {
@@ -71,9 +71,10 @@ function saveRewardHistory(entry) {
   console.log('💾 Reward info saved:', entry);
 }
 
-// === 6️⃣ Cron job — her gece 23:59’da çalışır ===
+// === 6️⃣ Cron job — her gece 23:59 UTC’de çalışır ===
 cron.schedule('59 23 * * *', async () => {
-  console.log('⏰ Midnight reward job started...');
+  console.log('⏰ Midnight reward job started (UTC)...');
+
   const winner = await getDailyWinner();
   if (!winner) return console.log('No winner found today.');
 
@@ -84,4 +85,16 @@ cron.schedule('59 23 * * *', async () => {
   console.log(`🎁 Sending ${sendAmount} SOL from pot wallet`);
   const tx = await sendReward(winner, sendAmount);
   if (tx) console.log(`✅ Reward sent to ${winner}: ${tx}`);
+}, {
+  scheduled: true,
+  timezone: "UTC"
 });
+
+// === 7️⃣ Manuel test için CLI destek ===
+if (process.argv.includes('--to') && process.argv.includes('--amount')) {
+  const toIndex = process.argv.indexOf('--to') + 1;
+  const amountIndex = process.argv.indexOf('--amount') + 1;
+  const toWallet = process.argv[toIndex];
+  const amount = parseFloat(process.argv[amountIndex]);
+  sendReward(toWallet, amount);
+}

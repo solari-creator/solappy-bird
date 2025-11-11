@@ -30,18 +30,15 @@ transition: transform 0.2s, box-shadow 0.3s; position:relative; }
 @keyframes top3Pulse {0%{text-shadow:0 0 5px #ffcc00} 50%{text-shadow:0 0 20px #ffcc00} 100%{text-shadow:0 0 5px #ffcc00;}}
 .player { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
 .wallet { font-size:14px; color:#fff; cursor:pointer; position:relative; }
-.wallet:hover::after { content:attr(data-full) " | Plays: " attr(data-plays) " | Score: " attr(data-score); position:absolute; background:#111; border:1px solid #00ffcc; border-radius:5px; 
-padding:5px; color:#00ffcc; top:20px; left:0; white-space:nowrap; z-index:10; }
+.wallet:hover::after { content:attr(data-full) " | Plays: " attr(data-plays) " | Raw: " attr(data-score) " | Fair: " attr(data-fair); position:absolute; background:#111; border:1px solid #00ffcc; 
+border-radius:5px; padding:5px; color:#00ffcc; top:20px; left:0; white-space:nowrap; z-index:10; }
 .copied { position:absolute; top:-20px; left:50%; transform:translateX(-50%); background:#00ffcc; color:black; padding:2px 5px; border-radius:4px; font-size:12px; opacity:0; transition:opacity 0.2s; }
-.sparkline { display:inline-block; width:120px; height:30px; margin-left:10px; }
 .extra-stats { margin-top:20px; display:flex; justify-content:center; gap:10px; }
 .extra-box { width:180px; height:60px; border:2px solid #00ffcc; border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#111; color:#00ffcc; }
 .extra-title { font-size:12px; color:#14f0e8; margin-bottom:2px; }
 .extra-value { font-size:14px; font-weight:bold; }
 .progress-bar { width:100%; background:#222; border-radius:8px; overflow:hidden; height:12px; margin-top:5px; }
 .progress-fill { background:#14f0e8; height:100%; width:0%; transition: width 1s ease; }
-canvas.sparkline.red { stroke:#ff4d4d !important; }
-canvas.sparkline.green { stroke:#00ff00 !important; }
 </style>
 </head>
 <body>
@@ -90,21 +87,39 @@ canvas.sparkline.green { stroke:#00ff00 !important; }
   Loading leaderboard...
 </div>
 
+<div id="winners">
+  <h2>🏅 Last Reward Winners</h2>
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Wallet</th><th>Reward (SOL)</th><th>Tx</th></tr>
+    </thead>
+    <tbody id="winnerList"></tbody>
+  </table>
+</div>
+
 <audio id="heroSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9a4b5f285d.mp3?filename=success-1-6297.mp3"></audio>
 <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
 
 <script>
-const confettiCanvas = document.getElementById('confettiCanvas');
-const confettiCtx = confettiCanvas.getContext('2d');
-confettiCanvas.width = window.innerWidth;
-confettiCanvas.height = window.innerHeight;
-let confettiParticles = [];
+let currentRange='daily', lastHero=null
+const confettiCanvas=document.getElementById('confettiCanvas')
+const confettiCtx=confettiCanvas.getContext('2d')
+confettiCanvas.width=window.innerWidth
+confettiCanvas.height=window.innerHeight
+let confettiParticles=[]
+
 function createConfetti(count=100){
-  for(let i=0;i<count;i++){
-    
-confettiParticles.push({x:Math.random()*confettiCanvas.width,y:Math.random()*confettiCanvas.height,r:Math.random()*6+4,d:Math.random()*50+10,color:`hsl(${Math.random()*360},100%,50%)`,tilt:Math.random()*10-5,tiltAngleIncrement:Math.random()*0.07+0.05});
-  }
+  for(let i=0;i<count;i++){confettiParticles.push({
+    x:Math.random()*confettiCanvas.width,
+    y:Math.random()*confettiCanvas.height,
+    r:Math.random()*6+4,
+    d:Math.random()*50+10,
+    color:`hsl(${Math.random()*360},100%,50%)`,
+    tilt:Math.random()*10-5,
+    tiltAngleIncrement:Math.random()*0.07+0.05
+  })}
 }
+
 function drawConfetti(){
   confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height)
   confettiParticles.forEach(p=>{
@@ -116,148 +131,101 @@ function drawConfetti(){
     confettiCtx.stroke()
   })
   confettiParticles.forEach(p=>{
-    p.tiltAngle += p.tiltAngleIncrement
-    p.y += (Math.cos(p.d)+3+p.r/2)/2
-    p.x += Math.sin(p.tiltAngle)
+    p.tiltAngle+=p.tiltAngleIncrement
+    p.y+=(Math.cos(p.d)+3+p.r/2)/2
+    p.x+=Math.sin(p.tiltAngle)
     if(p.y>confettiCanvas.height){p.y=-10;p.x=Math.random()*confettiCanvas.width}
   })
   requestAnimationFrame(drawConfetti)
 }
-function pulseValue(el,newValue){
-  if(el.textContent!==newValue){
-    el.textContent=newValue
-    el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse')
-  }
-}
-function drawSparkline(canvas,data){
-  if(!data||!data.length) return
-  const ctx = canvas.getContext('2d')
-  ctx.clearRect(0,0,canvas.width,canvas.height)
-  const max=Math.max(...data), min=Math.min(...data)
-  ctx.beginPath()
-  data.forEach((v,i)=>{
-    const x=(i/(data.length-1))*canvas.width
-    const y=canvas.height-((v-min)/(max-min))*canvas.height
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)
-  })
-  const color=data[data.length-1]>=data[data.length-2]?'#00ff00':'#ff4d4d'
-  ctx.strokeStyle=color
-  ctx.lineWidth=1.5
-  ctx.stroke()
-  canvas.className='sparkline '+(color=='#00ff00'?'green':'red')
-}
 
-let currentRange='daily'
-let lastHero=null
+function fairScore(raw,plays){return Math.round(raw/(1+Math.log(plays+1)*0.25))}
 
 async function fetchLeaderboard(range=currentRange){
   try{
-    const res = await fetch(`/scores?range=${range}`)
-    const data = await res.json()
-    const leaderboard = document.getElementById('leaderboard')
+    const res=await fetch(`/scores?range=${range}`)
+    const data=await res.json()
+    const leaderboard=document.getElementById('leaderboard')
     leaderboard.innerHTML='<h2>🏅 Top 20 Players</h2>'
-    let totalPlays=0
-    const playersSet = new Set()
-    const walletMap = {}
-    data.forEach(p=>{
-      totalPlays += p.plays||1
-      if(!walletMap[p.wallet]){
-        walletMap[p.wallet]={score:p.score, plays:p.plays||1, lastScores:[p.score]}
-      }else{
-        walletMap[p.wallet].score=Math.max(walletMap[p.wallet].score,p.score)
-        walletMap[p.wallet].plays+=p.plays||1
-        walletMap[p.wallet].lastScores.push(p.score)
-      }
-      playersSet.add(p.wallet)
+    const walletMap={}
+    data.forEach(s=>{
+      if(!walletMap[s.wallet]) walletMap[s.wallet]={rawScore:s.score,plays:1,lastScores:[s.score]}
+      else { walletMap[s.wallet].rawScore=Math.max(walletMap[s.wallet].rawScore,s.score); walletMap[s.wallet].plays++; walletMap[s.wallet].lastScores.push(s.score) }
     })
-    const top20=Object.entries(walletMap).map(([wallet,val])=>({wallet,...val})).sort((a,b)=>b.score-a.score).slice(0,20)
-    top20.forEach((p,i)=>{
-      const row=document.createElement('div')
-      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.marginBottom='5px'
-      const leftDiv=document.createElement('div')
-      const shortWallet=p.wallet.slice(0,4)+'...'+p.wallet.slice(-4)
-      const walletSpan=document.createElement('span')
-      walletSpan.className='wallet'
-      walletSpan.textContent=`${shortWallet} (${p.plays})`
-      walletSpan.dataset.full=p.wallet
-      walletSpan.dataset.plays=p.plays
-      walletSpan.dataset.score=p.score
-      walletSpan.addEventListener('click',()=>{navigator.clipboard.writeText(p.wallet).then(()=>{
-        const copied=document.createElement('div'); copied.textContent='Copied!'; copied.className='copied'; walletSpan.appendChild(copied)
-        setTimeout(()=>copied.style.opacity=1,10); setTimeout(()=>{copied.style.opacity=0; copied.remove()},800)
-      })})
-      leftDiv.appendChild(walletSpan)
-      leftDiv.innerHTML+=` — Score: ${p.score}`
-      if(i==0) leftDiv.classList.add('gold')
-      else if(i==1) leftDiv.classList.add('silver')
-      else if(i==2) leftDiv.classList.add('bronze')
-      else if(i>=3 && i<10) leftDiv.classList.add('top4to10')
-      const canvas=document.createElement('canvas')
-      canvas.width=120; canvas.height=30
-      drawSparkline(canvas,p.lastScores)
-      row.appendChild(leftDiv)
+    const list=Object.entries(walletMap).map(([wallet,val])=>{
+      const fair=fairScore(val.rawScore,val.plays)
+      return {wallet,raw:val.rawScore,plays:val.plays,fair,lastScores:val.lastScores}
+    }).sort((a,b)=>b.fair-a.fair).slice(0,20)
+
+    list.forEach((p,i)=>{
+      const row=document.createElement('div'); row.className='player'
+      const left=document.createElement('div')
+      const short=p.wallet.slice(0,4)+'...'+p.wallet.slice(-4)
+      left.innerHTML=`${short} (${p.plays}) — Raw:${p.raw} / Fair:${p.fair}`
+      if(i==0) left.classList.add('gold')
+      else if(i==1) left.classList.add('silver')
+      else if(i==2) left.classList.add('bronze')
+      else if(i<10) left.classList.add('top4to10')
+      const canvas=document.createElement('canvas'); canvas.width=120; canvas.height=30
+      const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height)
+      const max=Math.max(...p.lastScores), min=Math.min(...p.lastScores)
+      ctx.beginPath()
+      p.lastScores.forEach((v,idx)=>{
+        const x=(idx/(p.lastScores.length-1))*canvas.width
+        const y=canvas.height-((v-min)/(max-min))*canvas.height
+        idx===0?ctx.moveTo(x,y):ctx.lineTo(x,y)
+      })
+      ctx.strokeStyle=p.lastScores[p.lastScores.length-1]>=p.lastScores[p.lastScores.length-2]?'#00ff00':'#ff4d4d'
+      ctx.lineWidth=1.5; ctx.stroke()
+      row.appendChild(left)
       row.appendChild(canvas)
       leaderboard.appendChild(row)
     })
-    const heroEl=document.getElementById('hero')
-    heroEl.textContent=top20.length>0?top20[0].wallet.slice(0,4)+'...'+top20[0].wallet.slice(-4)+' — '+top20[0].score:'N/A'
 
-    const heroTitle=document.getElementById('heroTitle')
-    heroTitle.textContent=`Hero of the ${range.charAt(0).toUpperCase()+range.slice(1)} 🦸`
-
-    if(lastHero!==top20[0]?.wallet && lastHero!==null){
-      document.getElementById('heroSound').play()
-      createConfetti(100)
-      drawConfetti()
-    }
-    lastHero=top20[0]?.wallet
-    document.getElementById('totalPlays').textContent=totalPlays
-    document.getElementById('totalPlayers').textContent=playersSet.size
+    const hero=document.getElementById('hero')
+    hero.textContent=list.length>0?list[0].wallet.slice(0,4)+'...'+list[0].wallet.slice(-4)+' — '+list[0].fair:'N/A'
+    document.getElementById('heroTitle').textContent=`Hero of the ${range.charAt(0).toUpperCase()+range.slice(1)} 🦸`
+    if(lastHero!==list[0]?.wallet && lastHero!==null){document.getElementById('heroSound').play(); createConfetti(100); drawConfetti()}
+    lastHero=list[0]?.wallet
   }catch(e){console.error(e)}
 }
 
-async function fetchPotBalance(){
+async function fetchTotals(){
+  try{const r=await fetch('/totals'); const d=await r.json()
+    document.getElementById('totalPlays').textContent=d.totalPlays
+    document.getElementById('totalPlayers').textContent=d.totalPlayers
+  }catch(e){console.error(e)}
+}
+
+async function fetchPot(){
   try{
-    const res=await fetch('/pot-balance')
-    const data = await res.json()
-    document.getElementById('potWallet').textContent=`${data.balance} SOL`
-    const resRewards=await fetch('/rewards')
-    const rewardsData = await resRewards.json()
-    const totalRewards = rewardsData.reduce((acc,r)=>acc+(r.lamports||0),0).toFixed(1)
-    document.getElementById('totalRewards').textContent=`${totalRewards} SOL`
+    const r=await fetch('/pot-balance'); const d=await r.json(); document.getElementById('potWallet').textContent=`${d.balance} SOL`
+    const r2=await fetch('/rewards'); const dr=await r2.json()
+    const tot=dr.reduce((a,b)=>a+(b.lamports||0),0).toFixed(1); document.getElementById('totalRewards').textContent=`${tot} SOL`
+    const wl=document.getElementById('winnerList'); wl.innerHTML=''
+    dr.reverse().slice(0,10).forEach(w=>{
+      const tr=document.createElement('tr'); tr.innerHTML=`<td>${new Date(w.date).toLocaleString()}</td><td>${w.wallet.slice(0,4)}...${w.wallet.slice(-4)}</td><td>${w.lamports}</td><td><a 
+href="https://solscan.io/tx/${w.tx}?cluster=mainnet" target="_blank">${w.tx?'View':'-'}</a></td>`; wl.appendChild(tr)
+    })
   }catch(e){console.error(e)}
 }
 
-function updateTimeLeft(){
-  const now=new Date()
-  const tomorrow=new Date()
-  tomorrow.setHours(24,0,0,0)
-  const diff = tomorrow-now
-  const h=Math.floor(diff/1000/60/60)
-  const m=Math.floor((diff/1000/60)%60)
-  const s=Math.floor((diff/1000)%60)
+function updateTime(){
+  const now=new Date(); const nxt=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+1,0,0,0))
+  const diff=nxt-now
+  const h=Math.floor(diff/36e5), m=Math.floor(diff/6e4)%60, s=Math.floor(diff/1e3)%60
   document.getElementById('timeLeft').textContent=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`
-  const progressPercent = ((24*60*60 - diff/1000)/(24*60*60))*100
-  document.getElementById('timeProgress').style.width=progressPercent+'%'
+  document.getElementById('timeProgress').style.width=`${(86400-diff/1000)/864}%`
 }
 
-// Tab seçim
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
-    tab.classList.add('active')
-    currentRange=tab.dataset.range
-    lastHero=null
-    fetchLeaderboard(currentRange)
-  })
-})
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'))
+  t.classList.add('active')
+  currentRange=t.dataset.range; lastHero=null; fetchLeaderboard(currentRange)
+}))
 
-fetchLeaderboard(currentRange)
-fetchPotBalance()
-updateTimeLeft()
-setInterval(fetchLeaderboard,10000)
-setInterval(fetchPotBalance,60000)
-setInterval(updateTimeLeft,1000)
+fetchLeaderboard(); fetchTotals(); fetchPot(); updateTime()
+setInterval(fetchLeaderboard,10000); setInterval(fetchTotals,60000); setInterval(fetchPot,60000); setInterval(updateTime,1000)
 </script>
 </body>
 </html>
